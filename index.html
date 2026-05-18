@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="manifest.json" />
+  <title>pj-markedtal</title>
+  <style>
+    :root{--bg:#f4f7fb;--card:#fff;--text:#0f172a;--muted:#64748b;--green:#16a34a;--yellow:#eab308;--red:#dc2626;--shadow:0 10px 30px rgba(15,23,42,.08)}
+    *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#eef4ff,#f8fafc);color:var(--text)}
+    .wrap{max-width:420px;margin:0 auto;padding:18px 14px 28px} .top{display:flex;justify-content:space-between;align-items:flex-start;margin:6px 2px 14px;gap:12px}
+    h1{margin:0;font-size:28px;letter-spacing:.3px} .sub{color:var(--muted);font-size:13px;margin-top:4px}
+    .btn{border:0;background:#0f172a;color:#fff;border-radius:14px;padding:11px 14px;font-weight:700;box-shadow:var(--shadow)}
+    .status{margin:10px 2px 16px;padding:10px 12px;border-radius:14px;background:#fff7ed;color:#9a3412;font-size:13px;box-shadow:var(--shadow)}
+    .grid{display:grid;gap:12px}.card{background:var(--card);border-radius:20px;padding:14px 14px 16px;box-shadow:var(--shadow)}
+    .label{font-size:13px;font-weight:700;color:#111827;margin-bottom:10px}.val{font-size:34px;font-weight:800;letter-spacing:-.8px}
+    .meta{display:flex;justify-content:space-between;align-items:center;margin-top:8px;color:var(--muted);font-size:12px;gap:8px}
+    .bar{height:10px;border-radius:999px;background:linear-gradient(90deg,var(--green) 0 34%,var(--yellow) 34% 68%,var(--red) 68% 100%);position:relative;margin-top:10px}
+    .knob{position:absolute;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid #111827;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+    .scale{display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--muted)} .small{font-size:11px}
+    .updated{margin-top:14px;text-align:center;color:var(--muted);font-size:12px}
+    .hint{font-size:12px;color:var(--muted);margin-top:8px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <h1>Markedsmåler</h1>
+        <div class="sub">Enkel version · stabil live-hentning</div>
+        <div class="hint">Udfyld FRED API-nøgle i koden, før live-data virker.</div>
+      </div>
+      <button class="btn" id="refreshBtn">Opdater</button>
+    </div>
+    <div class="status" id="status">Tryk på opdater for at hente nye tal.</div>
+    <div class="grid" id="cards"></div>
+    <div class="updated" id="updated"></div>
+  </div>
+  <script>
+    const FRED_API_KEY = 'INDSÆT_DIN_FRED_API_NØGLE_HER';
+    const series = [
+      {key:'us10y', label:'US 10Y rente', unit:'%', fallback:4.47, low:3.5, high:4.5, fred:'DGS10'},
+      {key:'vix', label:'VIX / frygtindeks', unit:'', fallback:18.43, low:15, high:20, fred:'VIXCLS'},
+      {key:'brent', label:'Brent olie', unit:'$', fallback:109.26, low:70, high:90, fred:'DCOILBRENTEU'},
+      {key:'usdnok', label:'USD/NOK', unit:'', fallback:9.21, low:8.5, high:10.0, fred:null}
+    ];
+    const state = JSON.parse(localStorage.getItem('pj_markedtal')||'{}');
+    const fmt = n => Number(n).toFixed(2);
+    const pos = (n,a,b)=>Math.max(0,Math.min(100,((n-a)/(b-a))*100));
+    const render = (data, updated)=>{
+      const el = document.getElementById('cards'); el.innerHTML='';
+      data.forEach(s=>{
+        const p = pos(s.value, s.low*0.8, s.high*1.2);
+        const card = document.createElement('div'); card.className='card';
+        card.innerHTML = `<div class='label'>${s.label}</div><div class='val'>${fmt(s.value)}${s.unit}</div><div class='bar'><div class='knob' style='left:${p}%' ></div></div><div class='scale'><span>Lav</span><span>Normal</span><span>Høj</span></div><div class='meta'><span>Senest: ${s.date}</span><span class='small'>${s.status}</span></div>`;
+        el.appendChild(card);
+      });
+      document.getElementById('updated').textContent = updated ? `Opdateret: ${updated}` : '';
+    };
+    const initial = series.map(s=>({ ...s, value: state[s.key]?.value ?? s.fallback, date: state[s.key]?.date ?? 'fallback', status: state[s.key]?.source ? 'Live' : 'Fallback' }));
+    render(initial, state.updated);
+    async function fetchFred(id){
+      const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${id}&api_key=${FRED_API_KEY}&file_type=json&sort_order=desc&limit=1`;
+      const r = await fetch(url);
+      if(!r.ok) throw new Error(id);
+      const j = await r.json();
+      const v = j?.observations?.[0]?.value;
+      const n = parseFloat(v);
+      if(!Number.isFinite(n)) throw new Error('bad value');
+      return {value:n, date:j.observations[0].date};
+    }
+    async function fetchUsdNok(){
+      const r = await fetch('https://open.er-api.com/v6/latest/USD');
+      if(!r.ok) throw new Error('fx');
+      const j = await r.json();
+      const n = j?.rates?.NOK;
+      if(!Number.isFinite(n)) throw new Error('bad fx');
+      return {value:n, date:j.time_last_update_utc || new Date().toISOString().slice(0,10)};
+    }
+    async function fetchAll(){
+      const now = new Date().toISOString().slice(0,16).replace('T',' ');
+      document.getElementById('status').textContent='Henter nye data...';
+      const next = [];
+      for(const s of series){
+        try{
+          let r;
+          if(s.key==='usdnok') r = await fetchUsdNok(); else r = await fetchFred(s.fred);
+          next.push({...s, value:r.value, date:r.date, source:true, status:'Live'});
+        }catch(e){
+          next.push({...s, value:s.fallback, date:'fallback', source:false, status:'Fallback'});
+        }
+      }
+      localStorage.setItem('pj_markedtal', JSON.stringify({updated: now, ...Object.fromEntries(next.map(x=>[x.key,{value:x.value,date:x.date,source:x.source}]))}));
+      render(next, now);
+      document.getElementById('status').textContent='Tallene er opdateret.';
+    }
+    document.getElementById('refreshBtn').addEventListener('click', fetchAll);
+    if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
+  </script>
+</body>
+</html>

@@ -1,25 +1,23 @@
 {
-  "name": "PJ Markedstal",
-  "short_name": "Markedstal",
-  "description": "Live markedsdata: renter, VIX, olie og USD/NOK",
+  "name": "Markedsmåler",
+  "short_name": "Markedsmåler",
+  "description": "Live markedsdata: renter, VIX, olie, USD/NOK",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0f172a",
+  "background_color": "#f1f5f9",
   "theme_color": "#0f172a",
   "icons": [
     {
       "src": "icon-192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     },
     {
       "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ]
 }

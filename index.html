@@ -6,145 +6,157 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Markedstal" />
-  <meta name="theme-color" content="#0f172a" />
+  <meta name="theme-color" content="#0b1220" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icon-192.png" />
   <title>PJ Markedstal</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-      background: linear-gradient(180deg, #eef4fb, #f8fafc);
-      color: #0f172a;
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0b1220;
+      color: #e6edf7;
       min-height: 100vh;
-      padding: env(safe-area-inset-top) 14px env(safe-area-inset-bottom);
+      padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
     }
-    .wrap { max-width: 420px; margin: 0 auto; }
     header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 18px 4px 14px;
+      padding: 20px 0 16px;
+      text-align: center;
+      border-bottom: 1px solid #1f2a3d;
     }
-    h1 { font-size: 22px; font-weight: 700; }
-    .sub { font-size: 12px; color: #64748b; margin-top: 2px; }
-    .btn {
-      background: #0f172a;
-      color: #fff;
+    h1 { font-size: 22px; font-weight: 600; letter-spacing: 0.3px; }
+    .subtitle { font-size: 13px; color: #8a96ad; margin-top: 4px; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 16px 0;
+    }
+    .card {
+      background: #131c2e;
+      border: 1px solid #1f2a3d;
+      border-radius: 14px;
+      padding: 14px;
+      min-height: 100px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .card .label {
+      font-size: 12px;
+      color: #8a96ad;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .card .value {
+      font-size: 26px;
+      font-weight: 700;
+      margin: 6px 0;
+    }
+    .card .meta {
+      font-size: 11px;
+      color: #6b7689;
+    }
+    .actions {
+      display: flex;
+      gap: 10px;
+      padding: 8px 0 20px;
+    }
+    button {
+      flex: 1;
+      background: #2563eb;
+      color: white;
       border: none;
-      padding: 9px 16px;
-      font-size: 13px;
+      padding: 14px;
+      font-size: 15px;
       font-weight: 600;
-      border-radius: 999px;
+      border-radius: 12px;
       cursor: pointer;
     }
+    button:active { background: #1d4ed8; }
     .status {
-      background: #fff7ed;
-      color: #9a3412;
-      border-radius: 12px;
-      padding: 10px 12px;
-      font-size: 13px;
-      margin: 6px 4px 14px;
-      border: 1px solid #fed7aa;
+      text-align: center;
+      font-size: 12px;
+      color: #6b7689;
+      padding: 6px 0 20px;
     }
-    .status.ok { background: #ecfdf5; color: #065f46; border-color: #a7f3d0; }
-    .status.err { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
-    .card {
-      background: #fff;
-      border-radius: 18px;
-      padding: 14px 16px 16px;
-      margin: 0 4px 12px;
-      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
-    }
-    .card .label { font-size: 13px; font-weight: 700; color: #0f172a; }
-    .card .val {
-      font-size: 34px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      margin: 4px 0 10px;
-    }
-    .bar {
-      position: relative;
-      height: 10px;
-      border-radius: 999px;
-      background: linear-gradient(90deg, #16a34a 0% 34%, #eab308 34% 68%, #dc2626 68% 100%);
-    }
-    .knob {
-      position: absolute;
-      top: 50%;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: #fff;
-      border: 3px solid #0f172a;
-      transform: translate(-50%, -50%);
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    }
-    .scale {
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-      color: #64748b;
-      margin-top: 6px;
-    }
-    .meta {
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-      color: #64748b;
-      margin-top: 8px;
-    }
-    .meta .live { color: #16a34a; font-weight: 600; }
-    .meta .fb   { color: #b45309; font-weight: 600; }
-    .updated { text-align: center; font-size: 12px; color: #64748b; margin: 10px 0 24px; }
+    .loading { opacity: 0.5; }
+    .err { color: #f87171; }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div>
-        <h1>Markedsmaler</h1>
-        <div class="sub">Live markedsdata · PJ</div>
-      </div>
-      <button class="btn" id="refreshBtn">Opdater</button>
-    </header>
+  <header>
+    <h1>PJ Markedstal</h1>
+    <div class="subtitle">Live markedsdata</div>
+  </header>
 
-    <div class="status" id="status">Henter nye tal…</div>
+  <div class="grid">
+    <div class="card" id="card-us10y">
+      <div class="label">US 10Y rente</div>
+      <div class="value" id="us10y-value">—</div>
+      <div class="meta" id="us10y-date">henter…</div>
+    </div>
 
-    <div id="kort"></div>
+    <div class="card" id="card-vix">
+      <div class="label">VIX (frygt)</div>
+      <div class="value" id="vix-value">—</div>
+      <div class="meta" id="vix-date">henter…</div>
+    </div>
 
-    <div class="updated" id="opdatert"></div>
+    <div class="card" id="card-brent">
+      <div class="label">Brent olie (USD)</div>
+      <div class="value" id="brent-value">—</div>
+      <div class="meta" id="brent-date">henter…</div>
+    </div>
+
+    <div class="card" id="card-fx">
+      <div class="label">USD / NOK</div>
+      <div class="value" id="fx-value">—</div>
+      <div class="meta" id="fx-date">henter…</div>
+    </div>
   </div>
+
+  <div class="actions">
+    <button onclick="loadAll()">Opdater nu</button>
+  </div>
+
+  <div class="status" id="status">Klar.</div>
 
   <script>
     const WORKER_URL = "https://pj-markedstal.poulj.workers.dev";
 
-    const Serier = [
-      { Nokkel: "us10y",  Navn: "US 10Y rente",      Enhet: "%", Fallback: 4.57, lavt: 3.5, hojt: 4.5,  path: "/fred?series=DGS10" },
-      { Nokkel: "vix",    Navn: "VIX / frygtindeks", Enhet: "",  Fallback: 16.8, lavt: 15,  hojt: 25,   path: "/fred?series=VIXCLS" },
-      { Nokkel: "brent",  Navn: "Brent olie",        Enhet: "$", Fallback: 104,  lavt: 70,  hojt: 95,   path: "/fred?series=DCOILBRENTEU" },
-      { Nokkel: "usdnok", Navn: "USD / NOK",         Enhet: "",  Fallback: 9.27, lavt: 8.5, hojt: 10.5, path: "/fx" }
-    ];
+    const FALLBACK = {
+      us10y: { value: 4.55, date: "fallback" },
+      vix:   { value: 17.0, date: "fallback" },
+      brent: { value: 100.0, date: "fallback" },
+      fx:    { value: 9.27, date: "fallback" }
+    };
 
-    const fmt = n => Number(n).toFixed(2);
-    const posPct = (n, a, b) => Math.max(0, Math.min(100, ((n - a) / (b - a)) * 100));
+    function getLastKnown(id) {
+      try {
+        const raw = localStorage.getItem("pj_last_" + id);
+        if (raw) return JSON.parse(raw);
+      } catch(e) {}
+      return null;
+    }
+    function saveLastKnown(id, value, date) {
+      try {
+        localStorage.setItem("pj_last_" + id, JSON.stringify({ value, date }));
+      } catch(e) {}
+    }
 
-    function render(data) {
-      const el = document.getElementById("kort");
-      el.innerHTML = "";
-      data.forEach(s => {
-        const p = posPct(s.Verdi, s.lavt * 0.8, s.hojt * 1.2);
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML =
-          '<div class="label">' + s.Navn + '</div>' +
-          '<div class="val">' + fmt(s.Verdi) + s.Enhet + '</div>' +
-          '<div class="bar"><div class="knob" style="left:' + p + '%"></div></div>' +
-          '<div class="scale"><span>Lav</span><span>Normal</span><span>Hoj</span></div>' +
-          '<div class="meta"><span>Senest: ' + (s.Dato || "—") + '</span>' +
-          '<span class="' + (s.Kilde === "Live" ? "live" : "fb") + '">' + s.Kilde + '</span></div>';
-        el.appendChild(card);
-      });
+    function setCard(id, value, date, suffix = "") {
+      const v = document.getElementById(id + "-value");
+      const d = document.getElementById(id + "-date");
+      if (value === null || value === undefined || isNaN(value)) {
+        v.textContent = "—";
+        d.textContent = "ingen data";
+        d.classList.add("err");
+        return;
+      }
+      v.textContent = (typeof value === "number" ? value.toFixed(2) : value) + suffix;
+      d.textContent = date || "";
+      d.classList.remove("err");
     }
 
     async function fetchSeries(path) {
@@ -155,58 +167,68 @@
 
     async function loadAll() {
       const status = document.getElementById("status");
-      status.className = "status";
-      status.textContent = "Henter nye tal…";
+      status.textContent = "Henter data…";
+      status.classList.remove("err");
 
-      const cache = JSON.parse(localStorage.getItem("pj_markedstal") || "{}");
-      const result = [];
+      ["us10y", "vix", "brent", "fx"].forEach(id => {
+        document.getElementById("card-" + id).classList.add("loading");
+      });
+
+      const tasks = [
+        { id: "us10y", path: "/yahoo?symbol=^TNX",  suffix: "%", fb: FALLBACK.us10y },
+        { id: "vix",   path: "/yahoo?symbol=^VIX",  suffix: "",  fb: FALLBACK.vix   },
+        { id: "brent", path: "/yahoo?symbol=BZ=F",  suffix: "",  fb: FALLBACK.brent },
+        { id: "fx",    path: "/fx",                 suffix: "",  fb: FALLBACK.fx    }
+      ];
+
       let okCount = 0;
+      let failCount = 0;
 
-      for (const s of Serier) {
+      await Promise.all(tasks.map(async t => {
         try {
-          const j = await fetchSeries(s.path);
+          const j = await fetchSeries(t.path);
           if (j && j.value !== null && j.value !== undefined && !isNaN(j.value)) {
-            result.push({ ...s, Verdi: j.value, Dato: j.date, Kilde: "Live" });
+            setCard(t.id, j.value, j.date, t.suffix);
+            saveLastKnown(t.id, j.value, j.date);
             okCount++;
           } else {
-            const c = cache[s.Nokkel];
-            result.push({ ...s, Verdi: c?.Verdi ?? s.Fallback, Dato: c?.Dato || "fallback", Kilde: "Reserve" });
+            const last = getLastKnown(t.id);
+            if (last) {
+              setCard(t.id, last.value, "sidst kendt " + last.date, t.suffix);
+            } else {
+              setCard(t.id, t.fb.value, "fallback", t.suffix);
+            }
+            failCount++;
           }
         } catch (e) {
-          const c = cache[s.Nokkel];
-          result.push({ ...s, Verdi: c?.Verdi ?? s.Fallback, Dato: c?.Dato || "fallback", Kilde: "Reserve" });
+          const last = getLastKnown(t.id);
+          if (last) {
+            setCard(t.id, last.value, "sidst kendt " + last.date, t.suffix);
+          } else {
+            setCard(t.id, t.fb.value, "fallback", t.suffix);
+          }
+          failCount++;
+        } finally {
+          document.getElementById("card-" + t.id).classList.remove("loading");
         }
-      }
+      }));
 
-      const now = new Date().toLocaleString("da-DK", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit", year: "numeric" });
-      const saved = { Oppdatert: now };
-      result.forEach(r => saved[r.Nokkel] = { Verdi: r.Verdi, Dato: r.Dato, Kilde: r.Kilde });
-      localStorage.setItem("pj_markedstal", JSON.stringify(saved));
-
-      render(result);
-      document.getElementById("opdatert").textContent = "Sidst opdateret: " + now;
-
-      if (okCount === Serier.length) {
-        status.className = "status ok";
-        status.textContent = "Alle tal er live opdateret.";
+      const now = new Date().toLocaleTimeString("da-DK", { hour: "2-digit", minute: "2-digit" });
+      if (okCount === 4) {
+        status.textContent = "Opdateret " + now;
       } else if (okCount > 0) {
-        status.className = "status";
-        status.textContent = "Nogle tal blev hentet live, andre bruger reservetal.";
+        status.textContent = "Delvis opdateret " + now + " (" + failCount + " fallback)";
       } else {
-        status.className = "status err";
-        status.textContent = "Kunne ikke hente live tal. Bruger reservetal.";
+        status.textContent = "Bruger fallback-tal (Worker ikke nået)";
+        status.classList.add("err");
       }
     }
-
-    document.getElementById("refreshBtn").addEventListener("click", loadAll);
-    document.addEventListener("visibilitychange", () => { if (!document.hidden) loadAll(); });
 
     loadAll();
     setInterval(loadAll, 5 * 60 * 1000);
-
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("sw.js").catch(() => {});
-    }
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) loadAll();
+    });
   </script>
 </body>
 </html>

@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Markedstal" />
-  <meta name="theme-color" content="#0b1220" />
+  <meta name="theme-color" content="#f5f7fa" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icon-192.png" />
   <title>PJ Markedstal</title>
@@ -14,18 +14,18 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #0b1220;
-      color: #e6edf7;
+      background: #f5f7fa;
+      color: #1a2233;
       min-height: 100vh;
       padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
     }
     header {
       padding: 20px 0 16px;
       text-align: center;
-      border-bottom: 1px solid #1f2a3d;
+      border-bottom: 1px solid #e2e8f0;
     }
-    h1 { font-size: 22px; font-weight: 600; letter-spacing: 0.3px; }
-    .subtitle { font-size: 13px; color: #8a96ad; margin-top: 4px; }
+    h1 { font-size: 22px; font-weight: 700; letter-spacing: 0.3px; color: #0f172a; }
+    .subtitle { font-size: 13px; color: #64748b; margin-top: 4px; }
     .grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -33,34 +33,61 @@
       padding: 16px 0;
     }
     .card {
-      background: #131c2e;
-      border: 1px solid #1f2a3d;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
       border-radius: 14px;
-      padding: 14px;
-      min-height: 100px;
+      padding: 14px 14px 14px 22px;
+      min-height: 110px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
+    .card::before {
+      content: "";
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 8px;
+      background: #cbd5e1;
+    }
+    .card.green::before  { background: #16a34a; }
+    .card.yellow::before { background: #eab308; }
+    .card.red::before    { background: #dc2626; }
     .card .label {
-      font-size: 12px;
-      color: #8a96ad;
+      font-size: 11px;
+      color: #64748b;
       text-transform: uppercase;
       letter-spacing: 0.5px;
+      font-weight: 600;
     }
-    .card .value {
-      font-size: 26px;
-      font-weight: 700;
+    .card .value-row {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
       margin: 6px 0;
     }
+    .card .value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .card .arrow {
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .arrow.up   { color: #16a34a; }
+    .arrow.down { color: #dc2626; }
+    .arrow.flat { color: #94a3b8; }
     .card .meta {
       font-size: 11px;
-      color: #6b7689;
+      color: #94a3b8;
     }
     .actions {
       display: flex;
       gap: 10px;
-      padding: 8px 0 20px;
+      padding: 8px 0 16px;
     }
     button {
       flex: 1;
@@ -72,16 +99,34 @@
       font-weight: 600;
       border-radius: 12px;
       cursor: pointer;
+      box-shadow: 0 1px 3px rgba(37,99,235,0.3);
     }
     button:active { background: #1d4ed8; }
     .status {
       text-align: center;
       font-size: 12px;
-      color: #6b7689;
-      padding: 6px 0 20px;
+      color: #64748b;
+      padding: 6px 0 24px;
     }
+    .legend {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      font-size: 11px;
+      color: #64748b;
+      padding: 4px 0 12px;
+    }
+    .legend span { display: flex; align-items: center; gap: 4px; }
+    .dot {
+      display: inline-block;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+    }
+    .dot.green  { background: #16a34a; }
+    .dot.yellow { background: #eab308; }
+    .dot.red    { background: #dc2626; }
     .loading { opacity: 0.5; }
-    .err { color: #f87171; }
+    .err { color: #dc2626; }
   </style>
 </head>
 <body>
@@ -90,28 +135,46 @@
     <div class="subtitle">Live markedsdata</div>
   </header>
 
+  <div class="legend">
+    <span><span class="dot green"></span>Godt</span>
+    <span><span class="dot yellow"></span>Neutralt</span>
+    <span><span class="dot red"></span>Advarsel</span>
+  </div>
+
   <div class="grid">
     <div class="card" id="card-us10y">
       <div class="label">US 10Y rente</div>
-      <div class="value" id="us10y-value">—</div>
+      <div class="value-row">
+        <div class="value" id="us10y-value">—</div>
+        <div class="arrow" id="us10y-arrow"></div>
+      </div>
       <div class="meta" id="us10y-date">henter…</div>
     </div>
 
     <div class="card" id="card-vix">
       <div class="label">VIX (frygt)</div>
-      <div class="value" id="vix-value">—</div>
+      <div class="value-row">
+        <div class="value" id="vix-value">—</div>
+        <div class="arrow" id="vix-arrow"></div>
+      </div>
       <div class="meta" id="vix-date">henter…</div>
     </div>
 
     <div class="card" id="card-brent">
       <div class="label">Brent olie (USD)</div>
-      <div class="value" id="brent-value">—</div>
+      <div class="value-row">
+        <div class="value" id="brent-value">—</div>
+        <div class="arrow" id="brent-arrow"></div>
+      </div>
       <div class="meta" id="brent-date">henter…</div>
     </div>
 
     <div class="card" id="card-fx">
       <div class="label">USD / NOK</div>
-      <div class="value" id="fx-value">—</div>
+      <div class="value-row">
+        <div class="value" id="fx-value">—</div>
+        <div class="arrow" id="fx-arrow"></div>
+      </div>
       <div class="meta" id="fx-date">henter…</div>
     </div>
   </div>
@@ -132,6 +195,31 @@
       fx:    { value: 9.27, date: "fallback" }
     };
 
+    function classify(id, v) {
+      if (v === null || v === undefined || isNaN(v)) return "";
+      if (id === "us10y") {
+        if (v < 4.0) return "green";
+        if (v <= 4.7) return "yellow";
+        return "red";
+      }
+      if (id === "vix") {
+        if (v < 15) return "green";
+        if (v <= 25) return "yellow";
+        return "red";
+      }
+      if (id === "brent") {
+        if (v < 80) return "green";
+        if (v <= 100) return "yellow";
+        return "red";
+      }
+      if (id === "fx") {
+        if (v < 9.0) return "green";
+        if (v <= 9.5) return "yellow";
+        return "red";
+      }
+      return "";
+    }
+
     function getLastKnown(id) {
       try {
         const raw = localStorage.getItem("pj_last_" + id);
@@ -145,18 +233,50 @@
       } catch(e) {}
     }
 
-    function setCard(id, value, date, suffix = "") {
+    function setArrow(id, newVal, oldVal) {
+      const a = document.getElementById(id + "-arrow");
+      if (oldVal === null || oldVal === undefined || isNaN(oldVal)) {
+        a.textContent = "";
+        return;
+      }
+      const diff = newVal - oldVal;
+      const threshold = Math.abs(oldVal) * 0.001;
+      a.classList.remove("up", "down", "flat");
+      if (Math.abs(diff) < threshold) {
+        a.textContent = "→";
+        a.classList.add("flat");
+      } else if (diff > 0) {
+        a.textContent = "↑";
+        a.classList.add("up");
+      } else {
+        a.textContent = "↓";
+        a.classList.add("down");
+      }
+    }
+
+    function setCard(id, value, date, suffix = "", previousValue = null) {
+      const card = document.getElementById("card-" + id);
       const v = document.getElementById(id + "-value");
       const d = document.getElementById(id + "-date");
+      const a = document.getElementById(id + "-arrow");
+
+      card.classList.remove("green", "yellow", "red");
+
       if (value === null || value === undefined || isNaN(value)) {
         v.textContent = "—";
         d.textContent = "ingen data";
         d.classList.add("err");
+        a.textContent = "";
         return;
       }
       v.textContent = (typeof value === "number" ? value.toFixed(2) : value) + suffix;
       d.textContent = date || "";
       d.classList.remove("err");
+
+      const cls = classify(id, value);
+      if (cls) card.classList.add(cls);
+
+      setArrow(id, value, previousValue);
     }
 
     async function fetchSeries(path) {
@@ -185,27 +305,27 @@
       let failCount = 0;
 
       await Promise.all(tasks.map(async t => {
+        const last = getLastKnown(t.id);
+        const prevValue = last ? last.value : null;
         try {
           const j = await fetchSeries(t.path);
           if (j && j.value !== null && j.value !== undefined && !isNaN(j.value)) {
-            setCard(t.id, j.value, j.date, t.suffix);
+            setCard(t.id, j.value, j.date, t.suffix, prevValue);
             saveLastKnown(t.id, j.value, j.date);
             okCount++;
           } else {
-            const last = getLastKnown(t.id);
             if (last) {
-              setCard(t.id, last.value, "sidst kendt " + last.date, t.suffix);
+              setCard(t.id, last.value, "sidst kendt " + last.date, t.suffix, null);
             } else {
-              setCard(t.id, t.fb.value, "fallback", t.suffix);
+              setCard(t.id, t.fb.value, "fallback", t.suffix, null);
             }
             failCount++;
           }
         } catch (e) {
-          const last = getLastKnown(t.id);
           if (last) {
-            setCard(t.id, last.value, "sidst kendt " + last.date, t.suffix);
+            setCard(t.id, last.value, "sidst kendt " + last.date, t.suffix, null);
           } else {
-            setCard(t.id, t.fb.value, "fallback", t.suffix);
+            setCard(t.id, t.fb.value, "fallback", t.suffix, null);
           }
           failCount++;
         } finally {

@@ -1,104 +1,171 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="da">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#0f172a" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Markedstal" />
+  <meta name="theme-color" content="#0b1220" />
   <link rel="manifest" href="manifest.json" />
-  <title>pj-markedtal</title>
+  <title>PJ Markedstal</title>
   <style>
-    :root{--bg:#f4f7fb;--card:#fff;--text:#0f172a;--muted:#64748b;--green:#16a34a;--yellow:#eab308;--red:#dc2626;--shadow:0 10px 30px rgba(15,23,42,.08)}
-    *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#eef4ff,#f8fafc);color:var(--text)}
-    .wrap{max-width:420px;margin:0 auto;padding:18px 14px 28px} .top{display:flex;justify-content:space-between;align-items:flex-start;margin:6px 2px 14px;gap:12px}
-    h1{margin:0;font-size:28px;letter-spacing:.3px} .sub{color:var(--muted);font-size:13px;margin-top:4px}
-    .btn{border:0;background:#0f172a;color:#fff;border-radius:14px;padding:11px 14px;font-weight:700;box-shadow:var(--shadow)}
-    .status{margin:10px 2px 16px;padding:10px 12px;border-radius:14px;background:#fff7ed;color:#9a3412;font-size:13px;box-shadow:var(--shadow)}
-    .grid{display:grid;gap:12px}.card{background:var(--card);border-radius:20px;padding:14px 14px 16px;box-shadow:var(--shadow)}
-    .label{font-size:13px;font-weight:700;color:#111827;margin-bottom:10px}.val{font-size:34px;font-weight:800;letter-spacing:-.8px}
-    .meta{display:flex;justify-content:space-between;align-items:center;margin-top:8px;color:var(--muted);font-size:12px;gap:8px}
-    .bar{height:10px;border-radius:999px;background:linear-gradient(90deg,var(--green) 0 34%,var(--yellow) 34% 68%,var(--red) 68% 100%);position:relative;margin-top:10px}
-    .knob{position:absolute;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid #111827;box-shadow:0 2px 8px rgba(0,0,0,.15)}
-    .scale{display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--muted)} .small{font-size:11px}
-    .updated{margin-top:14px;text-align:center;color:var(--muted);font-size:12px}
-    .hint{font-size:12px;color:var(--muted);margin-top:8px}
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0b1220;
+      color: #e6edf7;
+      min-height: 100vh;
+      padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
+    }
+    header { padding: 20px 0 16px; text-align: center; border-bottom: 1px solid #1f2a3d; }
+    h1 { font-size: 22px; font-weight: 600; }
+    .subtitle { font-size: 13px; color: #8a96ad; margin-top: 4px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 16px 0; }
+    .card {
+      background: #131c2e;
+      border: 1px solid #1f2a3d;
+      border-radius: 14px;
+      padding: 14px;
+      min-height: 100px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .card .label { font-size: 12px; color: #8a96ad; text-transform: uppercase; letter-spacing: 0.5px; }
+    .card .value { font-size: 26px; font-weight: 700; margin: 6px 0; }
+    .card .meta { font-size: 11px; color: #6b7689; }
+    .actions { display: flex; gap: 10px; padding: 8px 0 20px; }
+    button {
+      flex: 1;
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    button:active { background: #1d4ed8; }
+    .status { text-align: center; font-size: 12px; color: #6b7689; padding: 6px 0 20px; }
+    .loading { opacity: 0.5; }
+    .err { color: #f87171; }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="top">
-      <div>
-        <h1>Markedsmåler</h1>
-        <div class="sub">Enkel version · stabil  live-hentning</div>
-        <div class="hint">Udfyld FRED API-nøgle i koden, før live-data virker.</div>
-      </div>
-      <button class="btn" id="refreshBtn">Opdater</button>
+  <header>
+    <h1>PJ Markedstal</h1>
+    <div class="subtitle">Live markedsdata</div>
+  </header>
+
+  <div class="grid">
+    <div class="card" id="card-us10y">
+      <div class="label">US 10Y rente</div>
+      <div class="value" id="us10y-value">—</div>
+      <div class="meta" id="us10y-date">henter…</div>
     </div>
-    <div class="status" id="status">Tryk på opdater for at hente nye tal.</div>
-    <div class="grid" id="cards"></div>
-    <div class="updated" id="updated"></div>
+    <div class="card" id="card-vix">
+      <div class="label">VIX (frygt)</div>
+      <div class="value" id="vix-value">—</div>
+      <div class="meta" id="vix-date">henter…</div>
+    </div>
+    <div class="card" id="card-brent">
+      <div class="label">Brent olie (USD)</div>
+      <div class="value" id="brent-value">—</div>
+      <div class="meta" id="brent-date">henter…</div>
+    </div>
+    <div class="card" id="card-fx">
+      <div class="label">USD / NOK</div>
+      <div class="value" id="fx-value">—</div>
+      <div class="meta" id="fx-date">henter…</div>
+    </div>
   </div>
+
+  <div class="actions">
+    <button onclick="loadAll()">Opdater nu</button>
+  </div>
+
+  <div class="status" id="status">Klar.</div>
+
   <script>
-    const FRED_API_KEY ='38a3981f8b036b66f5b7a5bb16612460';
-    const series = [
-      {key:'us10y', label:'US 10Y rente', unit:'%', fallback:4.47, low:3.5, high:4.5, fred:'DGS10'},
-      {key:'vix', label:'VIX / frygtindeks', unit:'', fallback:18.43, low:15, high:20, fred:'VIXCLS'},
-      {key:'brent', label:'Brent olie', unit:'$', fallback:109.26, low:70, high:90, fred:'DCOILBRENTEU'},
-      {key:'usdnok', label:'USD/NOK', unit:'', fallback:9.21, low:8.5, high:10.0, fred:null}
-    ];
-    const state = JSON.parse(localStorage.getItem('pj_markedtal')||'{}');
-    const fmt = n => Number(n).toFixed(2);
-    const pos = (n,a,b)=>Math.max(0,Math.min(100,((n-a)/(b-a))*100));
-    const render = (data, updated)=>{
-      const el = document.getElementById('cards'); el.innerHTML='';
-      data.forEach(s=>{
-        const p = pos(s.value, s.low*0.8, s.high*1.2);
-        const card = document.createElement('div'); card.className='card';
-        card.innerHTML = `<div class='label'>${s.label}</div><div class='val'>${fmt(s.value)}${s.unit}</div><div class='bar'><div class='knob' style='left:${p}%' ></div></div><div class='scale'><span>Lav</span><span>Normal</span><span>Høj</span></div><div class='meta'><span>Senest: ${s.date}</span><span class='small'>${s.status}</span></div>`;
-        el.appendChild(card);
-      });
-      document.getElementById('updated').textContent = updated ? `Opdateret: ${updated}` : '';
+    const WORKER_URL = "https://pj-markedstal.poulj.workers.dev";
+
+    const FALLBACK = {
+      us10y: { value: 4.57, date: "fallback" },
+      vix:   { value: 18.43, date: "fallback" },
+      brent: { value: 109.26, date: "fallback" },
+      fx:    { value: 9.27, date: "fallback" }
     };
-    const initial = series.map(s=>({ ...s, value: state[s.key]?.value ?? s.fallback, date: state[s.key]?.date ?? 'fallback', status: state[s.key]?.source ? 'Live' : 'Fallback' }));
-    render(initial, state.updated);
-    async function fetchFred(id){
-      const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${id}&api_key=${FRED_API_KEY}&file_type=json&sort_order=desc&limit=1`;
-      const r = await fetch(url);
-      if(!r.ok) throw new Error(id);
-      const j = await r.json();
-      const v = j?.observations?.[0]?.value;
-      const n = parseFloat(v);
-      if(!Number.isFinite(n)) throw new Error('bad value');
-      return {value:n, date:j.observations[0].date};
-    }
-    async function fetchUsdNok(){
-      const r = await fetch('https://open.er-api.com/v6/latest/USD');
-      if(!r.ok) throw new Error('fx');
-      const j = await r.json();
-      const n = j?.rates?.NOK;
-      if(!Number.isFinite(n)) throw new Error('bad fx');
-      return {value:n, date:j.time_last_update_utc || new Date().toISOString().slice(0,10)};
-    }
-    async function fetchAll(){
-      const now = new Date().toISOString().slice(0,16).replace('T',' ');
-      document.getElementById('status').textContent='Henter nye data...';
-      const next = [];
-      for(const s of series){
-        try{
-          let r;
-          if(s.key==='usdnok') r = await fetchUsdNok(); else r = await fetchFred(s.fred);
-          next.push({...s, value:r.value, date:r.date, source:true, status:'Live'});
-        }catch(e){
-          next.push({...s, value:s.fallback, date:'fallback', source:false, status:'Fallback'});
-        }
+
+    function setCard(id, value, date, suffix) {
+      const v = document.getElementById(id + "-value");
+      const d = document.getElementById(id + "-date");
+      if (value === null || value === undefined || isNaN(value)) {
+        v.textContent = "—";
+        d.textContent = "ingen data";
+        d.classList.add("err");
+        return;
       }
-      localStorage.setItem('pj_markedtal', JSON.stringify({updated: now, ...Object.fromEntries(next.map(x=>[x.key,{value:x.value,date:x.date,source:x.source}]))}));
-      render(next, now);
-      document.getElementById('status').textContent='Tallene er opdateret.';
+      v.textContent = (typeof value === "number" ? value.toFixed(2) : value) + (suffix || "");
+      d.textContent = date || "";
+      d.classList.remove("err");
     }
-    document.getElementById('refreshBtn').addEventListener('click', fetchAll);
-    if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
+
+    async function fetchSeries(path) {
+      const r = await fetch(WORKER_URL + path, { cache: "no-store" });
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return await r.json();
+    }
+
+    async function loadAll() {
+      const status = document.getElementById("status");
+      status.textContent = "Henter data…";
+      status.classList.remove("err");
+
+      const tasks = [
+        { id: "us10y", path: "/fred?series=DGS10",        suffix: "%", fb: FALLBACK.us10y },
+        { id: "vix",   path: "/fred?series=VIXCLS",       suffix: "",  fb: FALLBACK.vix   },
+        { id: "brent", path: "/fred?series=DCOILBRENTEU", suffix: "",  fb: FALLBACK.brent },
+        { id: "fx",    path: "/fx",                       suffix: "",  fb: FALLBACK.fx    }
+      ];
+
+      let okCount = 0;
+      let failCount = 0;
+
+      await Promise.all(tasks.map(async (t) => {
+        try {
+          const j = await fetchSeries(t.path);
+          if (j && j.value !== null && j.value !== undefined && !isNaN(j.value)) {
+            setCard(t.id, j.value, j.date, t.suffix);
+            okCount++;
+          } else {
+            setCard(t.id, t.fb.value, "fallback", t.suffix);
+            failCount++;
+          }
+        } catch (e) {
+          setCard(t.id, t.fb.value, "fallback", t.suffix);
+          failCount++;
+        }
+      }));
+
+      const now = new Date().toLocaleTimeString("da-DK", { hour: "2-digit", minute: "2-digit" });
+      if (okCount === 4) {
+        status.textContent = "Opdateret " + now;
+      } else if (okCount > 0) {
+        status.textContent = "Delvis opdateret " + now + " (" + failCount + " fallback)";
+      } else {
+        status.textContent = "Bruger fallback-tal (Worker ikke nået)";
+        status.classList.add("err");
+      }
+    }
+
+    loadAll();
+    setInterval(loadAll, 5 * 60 * 1000);
+    document.addEventListener("visibilitychange", function () {
+      if (!document.hidden) loadAll();
+    });
   </script>
 </body>
 </html>

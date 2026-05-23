@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Markedsmåler" />
-  <meta name="theme-color" content="#f5f7fa" />
+  <meta name="theme-color" content="#f1f5f9" />
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icon-192.png" />
   <title>Markedsmåler</title>
@@ -71,6 +71,41 @@
       background: #fefce8;
       border-color: #fde68a;
       color: #854d0e;
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .mini-card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 12px 8px;
+      text-align: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .mini-label {
+      font-size: 12px;
+      color: #64748b;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-bottom: 6px;
+    }
+    .mini-value {
+      font-size: 18px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.3px;
+      line-height: 1.1;
+    }
+    .mini-currency {
+      font-size: 10px;
+      color: #94a3b8;
+      margin-top: 4px;
+      font-weight: 500;
     }
 
     .grid {
@@ -159,6 +194,24 @@
 
   <div class="info-banner" id="banner">Henter live data…</div>
 
+  <div class="mini-grid">
+    <div class="mini-card" id="card-gold">
+      <div class="mini-label">Guld</div>
+      <div class="mini-value" id="gold-value">—</div>
+      <div class="mini-currency">USD / oz</div>
+    </div>
+    <div class="mini-card" id="card-silver">
+      <div class="mini-label">Sølv</div>
+      <div class="mini-value" id="silver-value">—</div>
+      <div class="mini-currency">USD / oz</div>
+    </div>
+    <div class="mini-card" id="card-btc">
+      <div class="mini-label">Bitcoin</div>
+      <div class="mini-value" id="btc-value">—</div>
+      <div class="mini-currency">USD</div>
+    </div>
+  </div>
+
   <div class="grid">
     <div class="card" id="card-us10y">
       <div class="label">US 10Y rente</div>
@@ -214,14 +267,17 @@
       us10y: { value: 4.55, date: "fallback" },
       vix:   { value: 17.0, date: "fallback" },
       brent: { value: 100.0, date: "fallback" },
-      fx:    { value: 9.27, date: "fallback" }
+      fx:    { value: 9.27, date: "fallback" },
+      gold:  { value: 2350, date: "fallback" },
+      silver:{ value: 30,   date: "fallback" },
+      btc:   { value: 75000, date: "fallback" }
     };
 
     const SCALE = {
-      us10y: { min: 3.5, max: 5.5, suffix: "%", decimals: 2 },
-      vix:   { min: 10,  max: 35,  suffix: "",  decimals: 2 },
-      brent: { min: 70,  max: 120, suffix: "$", decimals: 2 },
-      fx:    { min: 8.5, max: 10.0, suffix: "", decimals: 2 }
+      us10y: { min: 3.5, max: 5.5,  suffix: "%", decimals: 2 },
+      vix:   { min: 10,  max: 35,   suffix: "",  decimals: 2 },
+      brent: { min: 70,  max: 120,  suffix: "$", decimals: 2 },
+      fx:    { min: 8.5, max: 10.0, suffix: "",  decimals: 2 }
     };
 
     function getLastKnown(id) {
@@ -260,31 +316,30 @@
       return num + s.suffix;
     }
 
+    function formatMini(id, value) {
+      if (value === null || value === undefined || isNaN(value)) return "—";
+      if (id === "btc")    return Math.round(value).toLocaleString("da-DK");
+      if (id === "gold")   return Math.round(value).toLocaleString("da-DK");
+      if (id === "silver") return value.toFixed(2);
+      return value.toFixed(2);
+    }
+
     function setCard(id, value, date, statusType) {
       const v = document.getElementById(id + "-value");
       const d = document.getElementById(id + "-date");
       const st = document.getElementById(id + "-status");
-
       v.textContent = formatValue(id, value);
-
-      if (date) {
-        d.textContent = "Senest: " + date;
-      } else {
-        d.textContent = "Senest: —";
-      }
-
+      d.textContent = date ? "Senest: " + date : "Senest: —";
       st.classList.remove("stale", "fallback");
-      if (statusType === "live") {
-        st.textContent = "Live";
-      } else if (statusType === "stale") {
-        st.textContent = "Sidst kendt";
-        st.classList.add("stale");
-      } else {
-        st.textContent = "Fallback";
-        st.classList.add("fallback");
-      }
-
+      if (statusType === "live") st.textContent = "Live";
+      else if (statusType === "stale") { st.textContent = "Sidst kendt"; st.classList.add("stale"); }
+      else { st.textContent = "Fallback"; st.classList.add("fallback"); }
       setMarker(id, value);
+    }
+
+    function setMiniCard(id, value) {
+      const v = document.getElementById(id + "-value");
+      v.textContent = formatMini(id, value);
     }
 
     async function fetchSeries(path) {
@@ -298,38 +353,51 @@
       banner.textContent = "Henter data…";
       banner.classList.remove("err", "warn");
 
-      ["us10y", "vix", "brent", "fx"].forEach(id => {
-        document.getElementById("card-" + id).classList.add("loading");
+      ["us10y", "vix", "brent", "fx", "gold", "silver", "btc"].forEach(id => {
+        const c = document.getElementById("card-" + id);
+        if (c) c.classList.add("loading");
       });
 
       const tasks = [
-        { id: "us10y", path: "/yahoo?symbol=^TNX",  fb: FALLBACK.us10y },
-        { id: "vix",   path: "/yahoo?symbol=^VIX",  fb: FALLBACK.vix   },
-        { id: "brent", path: "/yahoo?symbol=BZ=F",  fb: FALLBACK.brent },
-        { id: "fx",    path: "/fx",                 fb: FALLBACK.fx    }
+        { id: "us10y",  path: "/yahoo?symbol=^TNX",     mini: false, fb: FALLBACK.us10y },
+        { id: "vix",    path: "/yahoo?symbol=^VIX",     mini: false, fb: FALLBACK.vix   },
+        { id: "brent",  path: "/yahoo?symbol=BZ=F",     mini: false, fb: FALLBACK.brent },
+        { id: "fx",     path: "/fx",                    mini: false, fb: FALLBACK.fx    },
+        { id: "gold",   path: "/yahoo?symbol=GC=F",     mini: true,  fb: FALLBACK.gold  },
+        { id: "silver", path: "/yahoo?symbol=SI=F",     mini: true,  fb: FALLBACK.silver},
+        { id: "btc",    path: "/yahoo?symbol=BTC-USD",  mini: true,  fb: FALLBACK.btc   }
       ];
 
       let okCount = 0, failCount = 0;
+      const totalLive = tasks.length;
 
       await Promise.all(tasks.map(async t => {
         const last = getLastKnown(t.id);
         try {
           const j = await fetchSeries(t.path);
           if (j && j.value !== null && j.value !== undefined && !isNaN(j.value)) {
-            setCard(t.id, j.value, j.date, "live");
+            if (t.mini) setMiniCard(t.id, j.value);
+            else        setCard(t.id, j.value, j.date, "live");
             saveLastKnown(t.id, j.value, j.date);
             okCount++;
           } else {
-            if (last) setCard(t.id, last.value, last.date, "stale");
-            else      setCard(t.id, t.fb.value, "fallback", "fallback");
+            const val = last ? last.value : t.fb.value;
+            const dt  = last ? last.date  : "fallback";
+            const status = last ? "stale" : "fallback";
+            if (t.mini) setMiniCard(t.id, val);
+            else        setCard(t.id, val, dt, status);
             failCount++;
           }
         } catch (e) {
-          if (last) setCard(t.id, last.value, last.date, "stale");
-          else      setCard(t.id, t.fb.value, "fallback", "fallback");
+          const val = last ? last.value : t.fb.value;
+          const dt  = last ? last.date  : "fallback";
+          const status = last ? "stale" : "fallback";
+          if (t.mini) setMiniCard(t.id, val);
+          else        setCard(t.id, val, dt, status);
           failCount++;
         } finally {
-          document.getElementById("card-" + t.id).classList.remove("loading");
+          const c = document.getElementById("card-" + t.id);
+          if (c) c.classList.remove("loading");
         }
       }));
 
@@ -337,11 +405,11 @@
       const timeStr = now.toLocaleTimeString("da-DK", { hour: "2-digit", minute: "2-digit" });
       const dateStr = now.toLocaleDateString("da-DK");
 
-      if (okCount === 4) {
+      if (okCount === totalLive) {
         banner.textContent = "Alle tal er live opdateret.";
         banner.classList.remove("err", "warn");
       } else if (okCount > 0) {
-        banner.textContent = okCount + " af 4 tal er live (" + failCount + " bruger sidst kendt).";
+        banner.textContent = okCount + " af " + totalLive + " tal er live (" + failCount + " bruger sidst kendt).";
         banner.classList.add("warn");
       } else {
         banner.textContent = "Kunne ikke hente live data – bruger sidst kendte tal.";

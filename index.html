@@ -28,7 +28,7 @@
     .subtitle { font-size: 13px; color: #64748b; margin-top: 4px; }
     .grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr;
       gap: 12px;
       padding: 16px 0;
     }
@@ -36,54 +36,73 @@
       background: #ffffff;
       border: 1px solid #e2e8f0;
       border-radius: 14px;
-      padding: 14px 14px 14px 22px;
-      min-height: 110px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      position: relative;
-      overflow: hidden;
+      padding: 14px 16px 18px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
-    .card::before {
-      content: "";
-      position: absolute;
-      left: 0; top: 0; bottom: 0;
-      width: 8px;
-      background: #cbd5e1;
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 4px;
     }
-    .card.green::before  { background: #16a34a; }
-    .card.yellow::before { background: #eab308; }
-    .card.red::before    { background: #dc2626; }
     .card .label {
-      font-size: 11px;
+      font-size: 12px;
       color: #64748b;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       font-weight: 600;
     }
-    .card .value-row {
+    .card .meta {
+      font-size: 11px;
+      color: #94a3b8;
+    }
+    .value-row {
       display: flex;
       align-items: baseline;
-      gap: 6px;
-      margin: 6px 0;
+      gap: 8px;
+      margin: 4px 0 14px;
     }
-    .card .value {
-      font-size: 28px;
+    .value {
+      font-size: 30px;
       font-weight: 700;
       color: #0f172a;
     }
-    .card .arrow {
-      font-size: 16px;
+    .arrow {
+      font-size: 18px;
       font-weight: 700;
     }
     .arrow.up   { color: #16a34a; }
     .arrow.down { color: #dc2626; }
     .arrow.flat { color: #94a3b8; }
-    .card .meta {
-      font-size: 11px;
-      color: #94a3b8;
+
+    .scale-wrap {
+      position: relative;
+      padding-top: 10px;
     }
+    .scale-bar {
+      height: 10px;
+      border-radius: 5px;
+      background: linear-gradient(to right, #16a34a 0%, #16a34a 33%, #eab308 50%, #dc2626 67%, #dc2626 100%);
+      position: relative;
+    }
+    .marker {
+      position: absolute;
+      top: -8px;
+      width: 0; height: 0;
+      border-left: 7px solid transparent;
+      border-right: 7px solid transparent;
+      border-top: 10px solid #0f172a;
+      transform: translateX(-50%);
+      transition: left 0.4s ease;
+    }
+    .scale-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+
     .actions {
       display: flex;
       gap: 10px;
@@ -108,25 +127,8 @@
       color: #64748b;
       padding: 6px 0 24px;
     }
-    .legend {
-      display: flex;
-      justify-content: center;
-      gap: 14px;
-      font-size: 11px;
-      color: #64748b;
-      padding: 4px 0 12px;
-    }
-    .legend span { display: flex; align-items: center; gap: 4px; }
-    .dot {
-      display: inline-block;
-      width: 10px; height: 10px;
-      border-radius: 50%;
-    }
-    .dot.green  { background: #16a34a; }
-    .dot.yellow { background: #eab308; }
-    .dot.red    { background: #dc2626; }
-    .loading { opacity: 0.5; }
     .err { color: #dc2626; }
+    .loading { opacity: 0.6; }
   </style>
 </head>
 <body>
@@ -135,47 +137,65 @@
     <div class="subtitle">Live markedsdata</div>
   </header>
 
-  <div class="legend">
-    <span><span class="dot green"></span>Godt</span>
-    <span><span class="dot yellow"></span>Neutralt</span>
-    <span><span class="dot red"></span>Advarsel</span>
-  </div>
-
   <div class="grid">
     <div class="card" id="card-us10y">
-      <div class="label">US 10Y rente</div>
+      <div class="card-top">
+        <div class="label">US 10Y rente</div>
+        <div class="meta" id="us10y-date">henter…</div>
+      </div>
       <div class="value-row">
         <div class="value" id="us10y-value">—</div>
         <div class="arrow" id="us10y-arrow"></div>
       </div>
-      <div class="meta" id="us10y-date">henter…</div>
+      <div class="scale-wrap">
+        <div class="scale-bar"><div class="marker" id="us10y-marker"></div></div>
+        <div class="scale-labels"><span>3.5%</span><span>4.5%</span><span>5.5%</span></div>
+      </div>
     </div>
 
     <div class="card" id="card-vix">
-      <div class="label">VIX (frygt)</div>
+      <div class="card-top">
+        <div class="label">VIX (frygt)</div>
+        <div class="meta" id="vix-date">henter…</div>
+      </div>
       <div class="value-row">
         <div class="value" id="vix-value">—</div>
         <div class="arrow" id="vix-arrow"></div>
       </div>
-      <div class="meta" id="vix-date">henter…</div>
+      <div class="scale-wrap">
+        <div class="scale-bar"><div class="marker" id="vix-marker"></div></div>
+        <div class="scale-labels"><span>10</span><span>20</span><span>35</span></div>
+      </div>
     </div>
 
     <div class="card" id="card-brent">
-      <div class="label">Brent olie (USD)</div>
+      <div class="card-top">
+        <div class="label">Brent olie (USD)</div>
+        <div class="meta" id="brent-date">henter…</div>
+      </div>
       <div class="value-row">
         <div class="value" id="brent-value">—</div>
         <div class="arrow" id="brent-arrow"></div>
       </div>
-      <div class="meta" id="brent-date">henter…</div>
+      <div class="scale-wrap">
+        <div class="scale-bar"><div class="marker" id="brent-marker"></div></div>
+        <div class="scale-labels"><span>$70</span><span>$95</span><span>$120</span></div>
+      </div>
     </div>
 
     <div class="card" id="card-fx">
-      <div class="label">USD / NOK</div>
+      <div class="card-top">
+        <div class="label">USD / NOK</div>
+        <div class="meta" id="fx-date">henter…</div>
+      </div>
       <div class="value-row">
         <div class="value" id="fx-value">—</div>
         <div class="arrow" id="fx-arrow"></div>
       </div>
-      <div class="meta" id="fx-date">henter…</div>
+      <div class="scale-wrap">
+        <div class="scale-bar"><div class="marker" id="fx-marker"></div></div>
+        <div class="scale-labels"><span>8.5</span><span>9.3</span><span>10.0</span></div>
+      </div>
     </div>
   </div>
 
@@ -195,30 +215,12 @@
       fx:    { value: 9.27, date: "fallback" }
     };
 
-    function classify(id, v) {
-      if (v === null || v === undefined || isNaN(v)) return "";
-      if (id === "us10y") {
-        if (v < 4.0) return "green";
-        if (v <= 4.7) return "yellow";
-        return "red";
-      }
-      if (id === "vix") {
-        if (v < 15) return "green";
-        if (v <= 25) return "yellow";
-        return "red";
-      }
-      if (id === "brent") {
-        if (v < 80) return "green";
-        if (v <= 100) return "yellow";
-        return "red";
-      }
-      if (id === "fx") {
-        if (v < 9.0) return "green";
-        if (v <= 9.5) return "yellow";
-        return "red";
-      }
-      return "";
-    }
+    const SCALE = {
+      us10y: { min: 3.5, max: 5.5 },
+      vix:   { min: 10,  max: 35  },
+      brent: { min: 70,  max: 120 },
+      fx:    { min: 8.5, max: 10.0 }
+    };
 
     function getLastKnown(id) {
       try {
@@ -231,6 +233,21 @@
       try {
         localStorage.setItem("pj_last_" + id, JSON.stringify({ value, date }));
       } catch(e) {}
+    }
+
+    function setMarker(id, value) {
+      const m = document.getElementById(id + "-marker");
+      if (!m) return;
+      if (value === null || value === undefined || isNaN(value)) {
+        m.style.display = "none";
+        return;
+      }
+      m.style.display = "block";
+      const s = SCALE[id];
+      let pct = ((value - s.min) / (s.max - s.min)) * 100;
+      if (pct < 0) pct = 0;
+      if (pct > 100) pct = 100;
+      m.style.left = pct + "%";
     }
 
     function setArrow(id, newVal, oldVal) {
@@ -255,27 +272,22 @@
     }
 
     function setCard(id, value, date, suffix = "", previousValue = null) {
-      const card = document.getElementById("card-" + id);
       const v = document.getElementById(id + "-value");
       const d = document.getElementById(id + "-date");
       const a = document.getElementById(id + "-arrow");
-
-      card.classList.remove("green", "yellow", "red");
 
       if (value === null || value === undefined || isNaN(value)) {
         v.textContent = "—";
         d.textContent = "ingen data";
         d.classList.add("err");
         a.textContent = "";
+        setMarker(id, null);
         return;
       }
       v.textContent = (typeof value === "number" ? value.toFixed(2) : value) + suffix;
       d.textContent = date || "";
       d.classList.remove("err");
-
-      const cls = classify(id, value);
-      if (cls) card.classList.add(cls);
-
+      setMarker(id, value);
       setArrow(id, value, previousValue);
     }
 
@@ -301,8 +313,7 @@
         { id: "fx",    path: "/fx",                 suffix: "",  fb: FALLBACK.fx    }
       ];
 
-      let okCount = 0;
-      let failCount = 0;
+      let okCount = 0, failCount = 0;
 
       await Promise.all(tasks.map(async t => {
         const last = getLastKnown(t.id);
@@ -314,19 +325,13 @@
             saveLastKnown(t.id, j.value, j.date);
             okCount++;
           } else {
-            if (last) {
-              setCard(t.id, last.value, "sidst kendt " + last.date, t.suffix, null);
-            } else {
-              setCard(t.id, t.fb.value, "fallback", t.suffix, null);
-            }
+            if (last) setCard(t.id, last.value, "sidst kendt " + last.date, t.suffix, null);
+            else      setCard(t.id, t.fb.value, "fallback", t.suffix, null);
             failCount++;
           }
         } catch (e) {
-          if (last) {
-            setCard(t.id, last.value, "sidst kendt " + last.date, t.suffix, null);
-          } else {
-            setCard(t.id, t.fb.value, "fallback", t.suffix, null);
-          }
+          if (last) setCard(t.id, last.value, "sidst kendt " + last.date, t.suffix, null);
+          else      setCard(t.id, t.fb.value, "fallback", t.suffix, null);
           failCount++;
         } finally {
           document.getElementById("card-" + t.id).classList.remove("loading");
@@ -334,14 +339,9 @@
       }));
 
       const now = new Date().toLocaleTimeString("da-DK", { hour: "2-digit", minute: "2-digit" });
-      if (okCount === 4) {
-        status.textContent = "Opdateret " + now;
-      } else if (okCount > 0) {
-        status.textContent = "Delvis opdateret " + now + " (" + failCount + " fallback)";
-      } else {
-        status.textContent = "Bruger fallback-tal (Worker ikke nået)";
-        status.classList.add("err");
-      }
+      if (okCount === 4) status.textContent = "Opdateret " + now;
+      else if (okCount > 0) status.textContent = "Delvis opdateret " + now + " (" + failCount + " fallback)";
+      else { status.textContent = "Bruger fallback-tal (Worker ikke nået)"; status.classList.add("err"); }
     }
 
     loadAll();

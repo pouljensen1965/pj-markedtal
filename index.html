@@ -64,7 +64,7 @@
       color: var(--muted);
       font-size: 12px;
       line-height: 1.25;
-      max-width: 180px;
+      max-width: 190px;
     }
 
     .refresh-btn {
@@ -81,6 +81,11 @@
       gap: 8px;
       min-height: 44px;
       cursor: pointer;
+    }
+
+    .refresh-btn:disabled {
+      opacity: 0.7;
+      cursor: wait;
     }
 
     .status-box {
@@ -124,7 +129,7 @@
       box-shadow: var(--shadow);
       border: 1px solid rgba(255,255,255,0.18);
       cursor: pointer;
-      transition: transform 140ms ease, filter 140ms ease, background 140ms ease;
+      transition: transform 140ms ease, filter 140ms ease;
     }
 
     .card:active {
@@ -132,19 +137,28 @@
       filter: brightness(0.98);
     }
 
-    .card.red { background: linear-gradient(180deg, #ff1e28 0%, var(--red) 100%); }
-    .card.yellow { background: linear-gradient(180deg, #ffd73b 0%, var(--yellow) 100%); }
-    .card.green { background: linear-gradient(180deg, #7be26f 0%, var(--green) 100%); }
+    .card.red {
+      background: linear-gradient(180deg, #ff202a 0%, #ef111b 100%);
+    }
+
+    .card.yellow {
+      background: linear-gradient(180deg, #ffd83f 0%, #efc61a 100%);
+    }
+
+    .card.green {
+      background: linear-gradient(180deg, #7ce56f 0%, #68cf5d 100%);
+    }
 
     .icon {
       width: 52px;
       height: 52px;
       border-radius: 50%;
-      background: rgba(255,255,255,0.85);
-      color: rgba(20,34,23,0.68);
+      background: rgba(255,255,255,0.82);
+      color: rgba(20,34,23,0.70);
       display: grid;
       place-items: center;
       font-size: 24px;
+      font-weight: 900;
     }
 
     .eyebrow {
@@ -152,7 +166,7 @@
       font-weight: 800;
       letter-spacing: 0.04em;
       text-transform: uppercase;
-      opacity: 0.95;
+      opacity: 0.96;
       margin-bottom: 2px;
     }
 
@@ -208,7 +222,7 @@
       flex-wrap: wrap;
       color: #425143;
       font-size: 11px;
-      padding: 8px 10px 0;
+      padding: 10px 10px 0;
     }
 
     .legend span {
@@ -235,7 +249,7 @@
     <header>
       <div class="top">
         <div class="title">
-          <h1>Markedsoversikt</h1>
+          <h1>Markets Overview</h1>
           <p>Live markedsdata · trykk på et kort for detaljer.</p>
         </div>
         <button class="refresh-btn" id="refreshBtn" type="button">
@@ -243,6 +257,7 @@
           <span>Oppdater</span>
         </button>
       </div>
+
       <div class="status-box" id="statusBox">
         <span>◔</span>
         <span id="statusText">Updating data ...</span>
@@ -259,17 +274,17 @@
   </main>
 
   <script>
-    const WORKER_URL = "https://pj-markedstal.poulj.workers.dev";
+    const BASE_URL = "https://pj-markedstal.poulj.workers.dev";
 
     const marketConfig = [
-      { key: "vix", label: "VIX Volatilitet", icon: "🛡️" },
-      { key: "us10y", label: "US10Y Rente", icon: "🏛️" },
-      { key: "sp500", label: "S&P 500 USA", icon: "📈" },
-      { key: "oil", label: "Olje WTI", icon: "🩸" },
-      { key: "gold", label: "Gull Spot", icon: "🪙" },
-      { key: "silver", label: "Sølv Spot", icon: "🥈" },
-      { key: "bitcoin", label: "Bitcoin (USD)", icon: "₿" },
-      { key: "usdNok", label: "USD / NOK", icon: "💵" }
+      { key: "vix", label: "VIX", sublabel: "Volatilitet", icon: "🛡️" },
+      { key: "us10y", label: "US10Y", sublabel: "Rente", icon: "🏛️" },
+      { key: "sp500", label: "S&P 500", sublabel: "USA", icon: "📈" },
+      { key: "oil", label: "Olje", sublabel: "WTI", icon: "🩸" },
+      { key: "gold", label: "Gull", sublabel: "Spot", icon: "🪙" },
+      { key: "silver", label: "Sølv", sublabel: "Spot", icon: "🥈" },
+      { key: "bitcoin", label: "Bitcoin", sublabel: "USD", icon: "₿" },
+      { key: "usdNok", label: "USD / NOK", sublabel: "", icon: "💵" }
     ];
 
     const fallbackData = {
@@ -289,52 +304,50 @@
     const statusText = document.getElementById("statusText");
 
     function badgeText(trend) {
-      if (trend === "green") return "Opp";
-      if (trend === "red") return "Ned";
-      return "Samme nivå";
+      if (trend === "green") return "OPP";
+      if (trend === "red") return "NED";
+      return "SAMME NIVÅ";
     }
 
-    function detectTrend(raw) {
-      const n = Number(raw);
+    function detectTrend(value) {
+      const n = Number(String(value).replace(",", ".").replace("%", ""));
       if (Number.isNaN(n)) return "yellow";
       if (n > 0) return "green";
       if (n < 0) return "red";
       return "yellow";
     }
 
-    function normalizeItem(key, incoming) {
-      if (!incoming) return fallbackData[key];
+    function fmtNumber(value, decimals = 2) {
+      const n = Number(value);
+      if (Number.isNaN(n)) return String(value ?? "-");
+      return n.toLocaleString("no-NO", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: decimals
+      });
+    }
 
-      const value = incoming.value ?? incoming.price ?? incoming.last ?? incoming.current ?? fallbackData[key].value;
-      const changeRaw = incoming.change ?? incoming.delta ?? incoming.dayChange ?? incoming.diff ?? null;
-      const changePct = incoming.changePct ?? incoming.percent ?? incoming.pct ?? incoming.dayChangePct ?? null;
+    function fmtSigned(value, decimals = 2, suffix = "") {
+      const n = Number(value);
+      if (Number.isNaN(n)) return String(value ?? "-");
+      const sign = n > 0 ? "+" : "";
+      return sign + n.toLocaleString("no-NO", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: decimals
+      }) + suffix;
+    }
 
-      let changeText = fallbackData[key].change;
-
-      if (changeRaw !== null && changePct !== null) {
-        changeText = `${changeRaw} (${changePct})`;
-      } else if (changeRaw !== null) {
-        changeText = String(changeRaw);
+    function pick(obj, keys) {
+      for (const key of keys) {
+        if (obj && obj[key] !== undefined && obj[key] !== null) return obj[key];
       }
-
-      const trend = incoming.trend ?? detectTrend(
-        typeof changeRaw === "string"
-          ? changeRaw.replace(",", ".").replace("%", "")
-          : changeRaw
-      );
-
-      return {
-        value: String(value),
-        change: changeText,
-        trend
-      };
+      return null;
     }
 
     function renderCards(data) {
       cardsEl.innerHTML = "";
 
       marketConfig.forEach((item) => {
-        const row = normalizeItem(item.key, data[item.key]);
+        const row = data[item.key] || fallbackData[item.key];
         const card = document.createElement("button");
         card.type = "button";
         card.className = `card market-card ${row.trend}`;
@@ -343,7 +356,7 @@
         card.innerHTML = `
           <div class="icon">${item.icon}</div>
           <div class="content">
-            <div class="eyebrow">${item.label}</div>
+            <div class="eyebrow">${item.label}${item.sublabel ? " " + item.sublabel : ""}</div>
             <div class="value">${row.value}</div>
             <div class="change">${row.change}</div>
             <div class="sub">1 dags endring</div>
@@ -362,16 +375,74 @@
       });
     }
 
+    async function fetchJson(url) {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return await res.json();
+    }
+
     async function loadLiveData() {
       statusText.textContent = "Updating data ...";
       statusBox.classList.add("show");
       refreshBtn.disabled = true;
 
       try {
-        const res = await fetch(WORKER_URL, { cache: "no-store" });
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        const data = await res.json();
-        renderCards(data);
+        const [vixRes, us10yRes, oilRes, fxRes] = await Promise.all([
+          fetchJson(BASE_URL + "/yahoo?symbol=^VIX"),
+          fetchJson(BASE_URL + "/yahoo?symbol=^TNX"),
+          fetchJson(BASE_URL + "/yahoo?symbol=BZ=F"),
+          fetchJson(BASE_URL + "/fx")
+        ]);
+
+        const liveData = { ...fallbackData };
+
+        const vixPrice = pick(vixRes, ["price", "regularMarketPrice", "value", "close"]);
+        const vixChange = pick(vixRes, ["change", "regularMarketChange", "delta"]);
+        const vixPct = pick(vixRes, ["changePercent", "regularMarketChangePercent", "pct"]);
+        if (vixPrice !== null) {
+          liveData.vix = {
+            value: fmtNumber(vixPrice, 2),
+            change: `${fmtSigned(vixChange, 2)} (${fmtSigned(vixPct, 2, "%")})`,
+            trend: detectTrend(vixChange)
+          };
+        }
+
+        const us10yPrice = pick(us10yRes, ["price", "regularMarketPrice", "value", "close"]);
+        const us10yChange = pick(us10yRes, ["change", "regularMarketChange", "delta"]);
+        const us10yPct = pick(us10yRes, ["changePercent", "regularMarketChangePercent", "pct"]);
+        if (us10yPrice !== null) {
+          liveData.us10y = {
+            value: fmtNumber(us10yPrice, 2) + "%",
+            change: `${fmtSigned(us10yChange, 2)} (${fmtSigned(us10yPct, 2, "%")})`,
+            trend: detectTrend(us10yChange)
+          };
+        }
+
+        const oilPrice = pick(oilRes, ["price", "regularMarketPrice", "value", "close"]);
+        const oilChange = pick(oilRes, ["change", "regularMarketChange", "delta"]);
+        const oilPct = pick(oilRes, ["changePercent", "regularMarketChangePercent", "pct"]);
+        if (oilPrice !== null) {
+          liveData.oil = {
+            value: fmtNumber(oilPrice, 2),
+            change: `${fmtSigned(oilChange, 2)} (${fmtSigned(oilPct, 2, "%")})`,
+            trend: detectTrend(oilChange)
+          };
+        }
+
+        const usdNokPrice = pick(fxRes, ["usdNok", "rate", "price", "value"]);
+        const usdNokChange = pick(fxRes, ["change", "delta", "diff"]);
+        const usdNokPct = pick(fxRes, ["changePercent", "pct", "percent"]);
+        if (usdNokPrice !== null) {
+          liveData.usdNok = {
+            value: fmtNumber(usdNokPrice, 4),
+            change: usdNokChange !== null
+              ? `${fmtSigned(usdNokChange, 4)}${usdNokPct !== null ? ` (${fmtSigned(usdNokPct, 2, "%")})` : ""}`
+              : "Live",
+            trend: detectTrend(usdNokChange ?? 0)
+          };
+        }
+
+        renderCards(liveData);
         statusText.textContent = "Data oppdatert";
       } catch (error) {
         renderCards(fallbackData);

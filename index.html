@@ -8,7 +8,6 @@
   <style>
     :root{
       --bg:#efefe9;
-      --screen:#f6f7f2;
       --text:#202320;
       --muted:#768072;
       --green:#69d45d;
@@ -16,7 +15,6 @@
       --yellow:#f2cb27;
       --white:#ffffff;
       --shadow:0 10px 30px rgba(0,0,0,.08);
-      --radius:22px;
     }
 
     *{box-sizing:border-box}
@@ -111,30 +109,6 @@
       to{transform:rotate(360deg)}
     }
 
-    .morgen{
-      margin-top:18px;
-      background:#fff;
-      border:1px solid #e3e8df;
-      border-radius:20px;
-      padding:18px 16px;
-      box-shadow:var(--shadow);
-    }
-
-    .morgen .label{
-      font-size:12px;
-      font-weight:900;
-      letter-spacing:.08em;
-      text-transform:uppercase;
-      color:var(--muted);
-      margin-bottom:8px;
-    }
-
-    .morgen .line{
-      font-size:18px;
-      font-weight:800;
-      line-height:1.3;
-    }
-
     .cards{
       display:grid;
       gap:14px;
@@ -174,6 +148,8 @@
     .icon{
       font-size:28px;
       line-height:1;
+      color:#5f685c;
+      font-weight:900;
     }
 
     .market{
@@ -318,11 +294,6 @@
       <span id="refreshText">Oppdaterer data ...</span>
     </div>
 
-    <section class="morgen">
-      <div class="label">MORGENSTATUS</div>
-      <div class="line" id="morgenLine">Laster markedsbilde ...</div>
-    </section>
-
     <section class="cards" id="cards"></section>
 
     <section class="legend">
@@ -340,7 +311,6 @@
     const refreshBtn = document.getElementById('refreshBtn');
     const refreshText = document.getElementById('refreshText');
     const cardsEl = document.getElementById('cards');
-    const morgenLine = document.getElementById('morgenLine');
 
     const marketConfig = [
       {
@@ -432,12 +402,12 @@
       });
     }
 
-    function parseWorkerNumber(data) {
+    function parseWorkerValue(data) {
       const candidates = [
+        data?.value,
         data?.price,
         data?.regularMarketPrice,
         data?.currentPrice,
-        data?.value,
         data?.close,
         data?.quoteResponse?.result?.[0]?.regularMarketPrice
       ];
@@ -487,8 +457,8 @@
       return { change, changePct };
     }
 
-    function getState(changeValue, reverse = false) {
-      const num = Number(changeValue);
+    function getState(signalValue, reverse = false) {
+      const num = Number(signalValue);
 
       if (!Number.isFinite(num) || Math.abs(num) < 0.0001) {
         return { colorClass: 'yellow', badge: 'SAMME NIVÅ' };
@@ -505,25 +475,6 @@
         : { colorClass: 'red', badge: 'NED' };
     }
 
-    function buildChangeText(change, changePct, decimals = 2) {
-      const hasChange = Number.isFinite(change);
-      const hasPct = Number.isFinite(changePct);
-
-      if (!hasChange && !hasPct) return 'Live';
-
-      const sign = hasChange && change > 0 ? '+' : '';
-      const changeText = hasChange
-        ? `${sign}${formatNumberNo(change, decimals)}`
-        : '';
-
-      const pctSign = hasPct && changePct > 0 ? '+' : '';
-      const pctText = hasPct
-        ? ` (${pctSign}${formatNumberNo(changePct, 2)}%)`
-        : '';
-
-      return `${changeText}${pctText}`.trim();
-    }
-
     function buildValue(rawValue, config) {
       if (!Number.isFinite(rawValue)) return '—';
 
@@ -534,15 +485,30 @@
       return formatNumberNo(rawValue, config.decimals);
     }
 
-    function buildNormalizedChanges(rawValue, rawChange, rawChangePct, config) {
+    function normalizeChange(rawChange, rawChangePct, config) {
       let change = rawChange;
       let changePct = rawChangePct;
 
-      if (config.type === 'percent_from_tnx') {
-        change = Number.isFinite(rawChange) ? rawChange / 10 : rawChange;
+      if (config.type === 'percent_from_tnx' && Number.isFinite(rawChange)) {
+        change = rawChange / 10;
       }
 
       return { change, changePct };
+    }
+
+    function buildChangeText(change, changePct, decimals = 2) {
+      const hasChange = Number.isFinite(change);
+      const hasPct = Number.isFinite(changePct);
+
+      if (!hasChange && !hasPct) return 'Live';
+
+      const sign = hasChange && change > 0 ? '+' : '';
+      const valueText = hasChange ? `${sign}${formatNumberNo(change, decimals)}` : '';
+
+      const pctSign = hasPct && changePct > 0 ? '+' : '';
+      const pctText = hasPct ? ` (${pctSign}${formatNumberNo(changePct, 2)}%)` : '';
+
+      return `${valueText}${pctText}`.trim();
     }
 
     async function fetchMarket(config) {
@@ -550,9 +516,9 @@
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
       const data = await response.json();
-      const rawValue = parseWorkerNumber(data);
+      const rawValue = parseWorkerValue(data);
       const { change: rawChange, changePct: rawChangePct } = parseWorkerChange(data);
-      const normalized = buildNormalizedChanges(rawValue, rawChange, rawChangePct, config);
+      const normalized = normalizeChange(rawChange, rawChangePct, config);
 
       return {
         ...config,
@@ -597,28 +563,6 @@
       }).join('');
     }
 
-    function buildMorningText(items) {
-      const lookup = Object.fromEntries(items.map(item => [item.key, item]));
-      const parts = [];
-
-      if (lookup.vix) {
-        const state = getState(lookup.vix.signalValue, true).badge.toLowerCase();
-        parts.push(`frykt ${state}`);
-      }
-
-      if (lookup.us10y) {
-        const state = getState(lookup.us10y.signalValue, true).badge.toLowerCase();
-        parts.push(`rente ${state}`);
-      }
-
-      if (lookup.sp500) {
-        const state = getState(lookup.sp500.signalValue, false).badge.toLowerCase();
-        parts.push(`aksjer ${state}`);
-      }
-
-      return parts.length ? parts.join(', ') + '.' : 'Markedene oppdatert.';
-    }
-
     async function loadMarkets() {
       refreshBtn.disabled = true;
       refreshBtn.innerHTML = '<span>⟳</span><span>Oppdaterer ...</span>';
@@ -627,12 +571,10 @@
       try {
         const results = await Promise.all(marketConfig.map(fetchMarket));
         renderCards(results);
-        morgenLine.textContent = buildMorningText(results);
         refreshText.textContent = 'Data oppdatert';
       } catch (error) {
         console.error(error);
         refreshText.textContent = 'Kunne ikke hente live-data';
-        morgenLine.textContent = 'Live-data er midlertidig utilgjengelig.';
       } finally {
         refreshBtn.disabled = false;
         refreshBtn.innerHTML = '<span>⟳</span><span>Oppdater</span>';

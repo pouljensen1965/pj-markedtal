@@ -7,115 +7,76 @@
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:#ebeae3;
-      --phone:#111113;
+      --bg:#efefe9;
       --screen:#f6f7f2;
       --text:#202320;
       --muted:#768072;
-      --soft:#eef2ec;
       --green:#69d45d;
       --red:#ff1f26;
       --yellow:#f2cb27;
       --white:#ffffff;
-      --shadow:0 18px 55px rgba(0,0,0,.18);
+      --shadow:0 10px 30px rgba(0,0,0,.08);
+      --radius:22px;
     }
 
     *{box-sizing:border-box}
-    html,body{margin:0;min-height:100%}
+    html,body{margin:0;padding:0}
     body{
       font-family:'Satoshi',system-ui,sans-serif;
       background:var(--bg);
       color:var(--text);
-      padding:8px;
+      -webkit-font-smoothing:antialiased;
+      text-rendering:optimizeLegibility;
     }
 
-    .frame{
-      width:min(100%,380px);
-      margin:0 auto;
-      background:linear-gradient(180deg,#191a1d,#0e0e10);
-      border-radius:34px;
-      padding:10px;
-      box-shadow:var(--shadow);
-      border:2px solid #2a2a2d;
+    .app{
+      width:100%;
+      max-width:100%;
+      min-height:100vh;
+      padding:20px 16px 40px;
     }
-
-    .screen{
-      background:var(--screen);
-      border-radius:28px;
-      height:812px;
-      overflow:hidden;
-      position:relative;
-      border:2px solid #2f3131;
-      display:flex;
-      flex-direction:column;
-    }
-
-    .statusbar{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      padding:8px 22px 2px;
-      font-size:12px;
-      font-weight:700;
-      flex:none;
-    }
-
-    .dynamic-island{
-      width:98px;
-      height:28px;
-      border-radius:18px;
-      background:#0b0b0c;
-      margin:0 auto 6px;
-      flex:none;
-    }
-
-    .content{
-      padding:10px 14px 18px;
-      overflow-y:auto;
-      -webkit-overflow-scrolling:touch;
-      display:grid;
-      gap:12px;
-      scrollbar-width:none;
-    }
-
-    .content::-webkit-scrollbar{display:none}
 
     .hero{
       display:flex;
       justify-content:space-between;
       align-items:flex-start;
       gap:12px;
+      margin-top:8px;
     }
 
     h1{
       margin:0;
-      font-size:18px;
+      font-size:28px;
       line-height:1.05;
       font-weight:900;
+      letter-spacing:-0.03em;
     }
 
     .sub{
-      font-size:11px;
+      font-size:16px;
       color:var(--muted);
-      margin-top:4px;
+      margin-top:8px;
+      line-height:1.35;
+      max-width:220px;
     }
 
     .update-btn{
       border:0;
       background:#28b24a;
       color:#fff;
-      border-radius:10px;
-      padding:10px 14px;
-      min-width:96px;
-      min-height:40px;
-      font-size:14px;
-      font-weight:700;
+      border-radius:14px;
+      padding:14px 18px;
+      min-width:120px;
+      min-height:52px;
+      font-size:16px;
+      font-weight:800;
       display:flex;
       align-items:center;
       justify-content:center;
       gap:8px;
-      box-shadow:0 8px 20px rgba(40,178,74,.28);
+      box-shadow:0 10px 25px rgba(40,178,74,.24);
       cursor:pointer;
+      flex:none;
     }
 
     .update-btn:disabled{
@@ -124,25 +85,26 @@
     }
 
     .refresh-box{
+      margin-top:18px;
       background:#edf1ec;
       border:1px solid #dde4db;
-      border-radius:10px;
-      padding:11px 12px;
+      border-radius:16px;
+      padding:14px 14px;
       display:flex;
       align-items:center;
       gap:10px;
       color:#40473f;
-      font-size:13px;
-      transition:.2s ease;
+      font-size:16px;
     }
 
     .refresh-box .spinner{
-      width:18px;
-      height:18px;
+      width:22px;
+      height:22px;
       border-radius:50%;
-      border:2px solid #7a8377;
+      border:3px solid #7a8377;
       border-right-color:transparent;
       animation:spin 1s linear infinite;
+      flex:none;
     }
 
     @keyframes spin{
@@ -150,40 +112,42 @@
     }
 
     .morgen{
+      margin-top:18px;
       background:#fff;
       border:1px solid #e3e8df;
-      border-radius:12px;
-      padding:12px 14px;
-      box-shadow:0 8px 20px rgba(0,0,0,.05);
+      border-radius:20px;
+      padding:18px 16px;
+      box-shadow:var(--shadow);
     }
 
     .morgen .label{
-      font-size:10px;
+      font-size:12px;
       font-weight:900;
       letter-spacing:.08em;
       text-transform:uppercase;
       color:var(--muted);
-      margin-bottom:4px;
+      margin-bottom:8px;
     }
 
     .morgen .line{
-      font-size:14px;
-      font-weight:700;
+      font-size:18px;
+      font-weight:800;
       line-height:1.3;
     }
 
     .cards{
       display:grid;
-      gap:10px;
+      gap:14px;
+      margin-top:18px;
     }
 
     .card{
-      border-radius:12px;
-      padding:10px 12px 10px 10px;
+      border-radius:22px;
+      padding:16px 16px 16px 14px;
       color:#fff;
       position:relative;
       overflow:hidden;
-      box-shadow:0 10px 24px rgba(0,0,0,.12);
+      box-shadow:0 12px 28px rgba(0,0,0,.12);
     }
 
     .card.red{background:linear-gradient(180deg,var(--red),#e0181e)}
@@ -192,14 +156,14 @@
 
     .card-grid{
       display:grid;
-      grid-template-columns:50px 1fr 116px;
-      gap:10px;
+      grid-template-columns:64px 1fr 132px;
+      gap:12px;
       align-items:center;
     }
 
     .icon-wrap{
-      width:46px;
-      height:46px;
+      width:58px;
+      height:58px;
       border-radius:50%;
       background:rgba(255,255,255,.94);
       display:grid;
@@ -208,65 +172,61 @@
     }
 
     .icon{
-      font-size:22px;
+      font-size:28px;
       line-height:1;
     }
 
     .market{
-      font-size:10px;
-      font-weight:700;
-      opacity:.92;
+      font-size:13px;
+      font-weight:800;
+      opacity:.95;
       text-transform:uppercase;
       letter-spacing:.03em;
     }
 
-    .market small{
-      font-size:9px;
-      text-transform:none;
-      opacity:.9;
-    }
-
     .value{
-      font-size:18px;
+      font-size:28px;
       line-height:1.05;
       font-weight:900;
-      margin-top:2px;
+      margin-top:4px;
       font-variant-numeric:tabular-nums;
+      letter-spacing:-0.03em;
     }
 
     .change{
-      font-size:10px;
-      margin-top:5px;
-      font-weight:700;
-      opacity:.96;
+      font-size:14px;
+      margin-top:8px;
+      font-weight:800;
+      opacity:.98;
     }
 
     .period{
-      font-size:10px;
-      opacity:.9;
-      margin-top:2px;
+      font-size:12px;
+      opacity:.92;
+      margin-top:3px;
     }
 
     .trend{
       display:flex;
       flex-direction:column;
       align-items:stretch;
-      gap:8px;
+      gap:10px;
     }
 
     .badge{
       align-self:end;
-      padding:4px 8px;
-      border-radius:7px;
-      font-size:10px;
+      padding:7px 12px;
+      border-radius:11px;
+      font-size:13px;
       font-weight:900;
-      background:rgba(0,0,0,.22);
+      background:rgba(0,0,0,.18);
       color:#fff;
       text-transform:uppercase;
+      white-space:nowrap;
     }
 
     .sparkline{
-      height:42px;
+      height:52px;
       position:relative;
     }
 
@@ -278,14 +238,14 @@
 
     .sparkline .base{
       stroke:rgba(255,255,255,.45);
-      stroke-dasharray:3 3;
-      stroke-width:1.4;
+      stroke-dasharray:5 5;
+      stroke-width:1.8;
     }
 
     .sparkline .line{
       fill:none;
       stroke:#fff;
-      stroke-width:2.1;
+      stroke-width:3;
       stroke-linecap:round;
       stroke-linejoin:round;
     }
@@ -293,91 +253,91 @@
     .sparkline .end{
       fill:#fff;
       stroke:rgba(255,255,255,.2);
-      stroke-width:2;
+      stroke-width:3;
     }
 
     .legend{
       display:flex;
       justify-content:center;
-      gap:14px;
+      gap:16px;
       align-items:center;
-      font-size:10px;
+      font-size:13px;
       color:#454a43;
       background:#fff;
-      border-radius:14px;
-      padding:8px 10px;
+      border-radius:18px;
+      padding:12px 14px;
       border:1px solid #e4e8e0;
-      margin-bottom:6px;
+      margin-top:18px;
       flex-wrap:wrap;
     }
 
     .legend-item{
       display:flex;
       align-items:center;
-      gap:6px;
+      gap:8px;
     }
 
     .legend-dot{
-      width:8px;
-      height:8px;
+      width:10px;
+      height:10px;
       border-radius:50%;
     }
 
     .scrollhint{
       text-align:center;
-      font-size:11px;
+      font-size:14px;
       color:var(--muted);
-      padding-bottom:2px;
+      padding:18px 0 6px;
     }
 
-    @media (max-width:380px){
-      .card-grid{grid-template-columns:46px 1fr 108px}
+    @media (max-width:390px){
+      .card-grid{
+        grid-template-columns:58px 1fr 118px;
+        gap:10px;
+      }
+
+      h1{font-size:24px}
+      .sub{font-size:15px;max-width:200px}
+      .value{font-size:24px}
+      .badge{font-size:12px;padding:6px 10px}
     }
   </style>
 </head>
 <body>
-  <div class="frame">
-    <div class="screen">
-      <div class="statusbar"><span>09.41</span><span>▮▮▮ ◔</span></div>
-      <div class="dynamic-island"></div>
+  <main class="app">
+    <section class="hero">
+      <div>
+        <h1>Markets Overview</h1>
+        <div class="sub">Live markedsdata · trykk på et kort for detaljer.</div>
+      </div>
+      <button class="update-btn" id="refreshBtn"><span>⟳</span><span>Oppdater</span></button>
+    </section>
 
-      <main class="content">
-        <section class="hero">
-          <div>
-            <h1>Markets Overview</h1>
-            <div class="sub">Live markedsdata · trykk på et kort for detaljer.</div>
-          </div>
-          <button class="update-btn" id="refreshBtn"><span>⟳</span><span>Oppdater</span></button>
-        </section>
-
-        <div class="refresh-box" id="refreshBox">
-          <span class="spinner"></span>
-          <span id="refreshText">Oppdaterer data ...</span>
-        </div>
-
-        <section class="morgen">
-          <div class="label">Morgenstatus</div>
-          <div class="line" id="morgenLine">Laster markedsbilde ...</div>
-        </section>
-
-        <section class="cards" id="cards"></section>
-
-        <section class="legend">
-          <div class="legend-item"><span class="legend-dot" style="background:#35b74a"></span>Green = up</div>
-          <div class="legend-item"><span class="legend-dot" style="background:#df1317"></span>Red = down</div>
-          <div class="legend-item"><span class="legend-dot" style="background:#d7ad00"></span>Yellow = same level</div>
-        </section>
-
-        <div class="scrollhint">Bla opp og ned med tommelen for å se alle feltene.</div>
-      </main>
+    <div class="refresh-box" id="refreshBox">
+      <span class="spinner"></span>
+      <span id="refreshText">Oppdaterer data ...</span>
     </div>
-  </div>
+
+    <section class="morgen">
+      <div class="label">MORGENSTATUS</div>
+      <div class="line" id="morgenLine">Laster markedsbilde ...</div>
+    </section>
+
+    <section class="cards" id="cards"></section>
+
+    <section class="legend">
+      <div class="legend-item"><span class="legend-dot" style="background:#35b74a"></span>Green = up</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#df1317"></span>Red = down</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#d7ad00"></span>Yellow = same level</div>
+    </section>
+
+    <div class="scrollhint">Bla opp og ned med tommelen for å se alle feltene.</div>
+  </main>
 
   <script>
     const WORKER_BASE = 'https://pj-markedstal.poulj.workers.dev';
 
     const refreshBtn = document.getElementById('refreshBtn');
-    const refreshBox = document.getElementById('refreshBox');
     const refreshText = document.getElementById('refreshText');
     const cardsEl = document.getElementById('cards');
     const morgenLine = document.getElementById('morgenLine');
@@ -457,9 +417,9 @@
         key: 'usdnok',
         market: 'USD / NOK',
         icon: '💵',
-        endpoint: `${WORKER_BASE}/yahoo?symbol=NOK%3DX`,
+        endpoint: `${WORKER_BASE}/yahoo?symbol=USDNOK%3DX`,
         reverse: true,
-        type: 'inverse_fx',
+        type: 'number',
         decimals: 4,
         spark: 'M2 18 L10 19 L18 19 L26 20 L34 20 L42 21 L50 21 L58 22 L66 22 L74 23 L82 23 L90 24 L98 24 L106 25'
       }
@@ -571,38 +531,18 @@
         return `${formatNumberNo(rawValue / 10, config.decimals)}%`;
       }
 
-      if (config.type === 'inverse_fx') {
-        return formatNumberNo(1 / rawValue, config.decimals);
-      }
-
       return formatNumberNo(rawValue, config.decimals);
     }
 
     function buildNormalizedChanges(rawValue, rawChange, rawChangePct, config) {
-      let value = rawValue;
       let change = rawChange;
       let changePct = rawChangePct;
 
       if (config.type === 'percent_from_tnx') {
-        value = Number.isFinite(rawValue) ? rawValue / 10 : rawValue;
         change = Number.isFinite(rawChange) ? rawChange / 10 : rawChange;
       }
 
-      if (config.type === 'inverse_fx') {
-        if (Number.isFinite(rawValue) && rawValue !== 0) {
-          const inverseValue = 1 / rawValue;
-          const previous = Number.isFinite(rawChange) ? (rawValue - rawChange) : null;
-          value = inverseValue;
-
-          if (Number.isFinite(previous) && previous !== 0) {
-            const inversePrev = 1 / previous;
-            change = inverseValue - inversePrev;
-            changePct = ((inverseValue / inversePrev) - 1) * 100;
-          }
-        }
-      }
-
-      return { value, change, changePct };
+      return { change, changePct };
     }
 
     async function fetchMarket(config) {
@@ -617,7 +557,11 @@
       return {
         ...config,
         valueText: buildValue(rawValue, config),
-        changeText: buildChangeText(normalized.change, normalized.changePct, config.type === 'inverse_fx' ? 4 : (config.decimals > 2 ? config.decimals : 2)),
+        changeText: buildChangeText(
+          normalized.change,
+          normalized.changePct,
+          config.decimals === 4 ? 4 : 2
+        ),
         period: '1 dags endring',
         signalValue: normalized.changePct ?? normalized.change ?? 0
       };
@@ -658,18 +602,18 @@
       const parts = [];
 
       if (lookup.vix) {
-        const vixState = getState(lookup.vix.signalValue, true).badge.toLowerCase();
-        parts.push(`frykt ${vixState}`);
+        const state = getState(lookup.vix.signalValue, true).badge.toLowerCase();
+        parts.push(`frykt ${state}`);
       }
 
       if (lookup.us10y) {
-        const rateState = getState(lookup.us10y.signalValue, true).badge.toLowerCase();
-        parts.push(`rente ${rateState}`);
+        const state = getState(lookup.us10y.signalValue, true).badge.toLowerCase();
+        parts.push(`rente ${state}`);
       }
 
       if (lookup.sp500) {
-        const spState = getState(lookup.sp500.signalValue, false).badge.toLowerCase();
-        parts.push(`aksjer ${spState}`);
+        const state = getState(lookup.sp500.signalValue, false).badge.toLowerCase();
+        parts.push(`aksjer ${state}`);
       }
 
       return parts.length ? parts.join(', ') + '.' : 'Markedene oppdatert.';
@@ -696,7 +640,6 @@
     }
 
     refreshBtn.addEventListener('click', loadMarkets);
-
     loadMarkets();
   </script>
 </body>

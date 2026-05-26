@@ -1,463 +1,489 @@
 <!DOCTYPE html>
 <html lang="no">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="Markedsmåler" />
-  <meta name="theme-color" content="#f4f6f1" />
-  <title>Markedsmåler</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Markets Overview</title>
+  <link rel="preconnect" href="https://api.fontshare.com" />
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet" />
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg: #f4f6f1;
-      --text: #142217;
-      --muted: #708070;
-      --line: rgba(20,34,23,0.08);
-      --shadow: 0 14px 30px rgba(22, 44, 29, 0.10);
-      --green: #68cf5d;
-      --yellow: #efc61a;
-      --red: #ef111b;
-      --button: #2ebe4c;
-      --button-dark: #1e9837;
-      --status-bg: #edf2eb;
+    :root{
+      --bg:#e9ebe5;
+      --phone:#111113;
+      --screen:#f6f7f2;
+      --text:#202320;
+      --muted:#768072;
+      --soft:#eef2ec;
+      --green:#69d45d;
+      --red:#ff1f26;
+      --yellow:#f2cb27;
+      --white:#ffffff;
+      --shadow:0 18px 55px rgba(0,0,0,.18);
     }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      padding: env(safe-area-inset-top) 14px env(safe-area-inset-bottom);
-      max-width: 560px;
-      margin: 0 auto;
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%}
+    body{
+      font-family:'Satoshi',system-ui,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      padding:8px;
     }
 
-    .app { padding: 18px 0 28px; }
-
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      background: linear-gradient(180deg, rgba(244,246,241,0.97) 0%, rgba(244,246,241,0.92) 75%, rgba(244,246,241,0) 100%);
-      backdrop-filter: blur(8px);
-      padding-bottom: 10px;
+    .frame{
+      width:min(100%,380px);
+      margin:0 auto;
+      background:linear-gradient(180deg,#191a1d,#0e0e10);
+      border-radius:34px;
+      padding:10px;
+      box-shadow:var(--shadow);
+      border:2px solid #2a2a2d;
     }
 
-    .top {
-      display: flex;
-      justify-content: space-between;
-      gap: 14px;
-      align-items: center;
-      padding: 6px 4px 10px;
+    .screen{
+      background:var(--screen);
+      border-radius:28px;
+      height:812px;
+      overflow:hidden;
+      position:relative;
+      border:2px solid #2f3131;
+      display:flex;
+      flex-direction:column;
     }
 
-    .title h1 {
-      font-size: 18px;
-      font-weight: 800;
-      margin-bottom: 2px;
+    .statusbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:8px 22px 2px;
+      font-size:12px;
+      font-weight:700;
+      flex:none;
     }
 
-    .title p {
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.25;
-      max-width: 190px;
+    .dynamic-island{
+      width:98px;
+      height:28px;
+      border-radius:18px;
+      background:#0b0b0c;
+      margin:0 auto 6px;
+      flex:none;
     }
 
-    .refresh-btn {
-      border: none;
-      background: linear-gradient(180deg, var(--button) 0%, var(--button-dark) 100%);
-      color: #fff;
-      font-weight: 800;
-      font-size: 13px;
-      border-radius: 12px;
-      padding: 12px 16px;
-      box-shadow: 0 10px 24px rgba(46, 190, 76, 0.28);
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      min-height: 44px;
-      cursor: pointer;
+    .content{
+      padding:10px 14px 18px;
+      overflow-y:auto;
+      -webkit-overflow-scrolling:touch;
+      display:grid;
+      gap:12px;
+      scrollbar-width:none;
     }
 
-    .refresh-btn:disabled {
-      opacity: 0.7;
-      cursor: wait;
+    .content::-webkit-scrollbar{display:none}
+
+    .hero{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
     }
 
-    .status-box {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: var(--status-bg);
-      border: 1px solid var(--line);
-      color: #435444;
-      border-radius: 12px;
-      padding: 12px 14px;
-      font-size: 13px;
-      margin: 6px 0 12px;
-      opacity: 0;
-      transform: translateY(-4px);
-      transition: 180ms ease;
-      pointer-events: none;
+    h1{
+      margin:0;
+      font-size:18px;
+      line-height:1.05;
+      font-weight:900;
     }
 
-    .status-box.show {
-      opacity: 1;
-      transform: translateY(0);
+    .sub{
+      font-size:11px;
+      color:var(--muted);
+      margin-top:4px;
     }
 
-    .cards {
-      display: grid;
-      gap: 12px;
+    .update-btn{
+      border:0;
+      background:#28b24a;
+      color:#fff;
+      border-radius:10px;
+      padding:10px 14px;
+      min-width:96px;
+      min-height:40px;
+      font-size:14px;
+      font-weight:700;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      box-shadow:0 8px 20px rgba(40,178,74,.28);
+      cursor:pointer;
     }
 
-    .card {
-      border: none;
-      width: 100%;
-      text-align: left;
-      border-radius: 18px;
-      padding: 14px 14px 12px;
-      color: #fff;
-      display: grid;
-      grid-template-columns: 64px 1fr auto;
-      gap: 12px;
-      align-items: center;
-      box-shadow: var(--shadow);
-      border: 1px solid rgba(255,255,255,0.18);
-      cursor: pointer;
-      transition: transform 140ms ease, filter 140ms ease;
+    .refresh-box{
+      background:#edf1ec;
+      border:1px solid #dde4db;
+      border-radius:10px;
+      padding:11px 12px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      color:#40473f;
+      font-size:13px;
+      transition:.2s ease;
     }
 
-    .card:active {
-      transform: scale(0.985);
-      filter: brightness(0.98);
+    .refresh-box .spinner{
+      width:18px;
+      height:18px;
+      border-radius:50%;
+      border:2px solid #7a8377;
+      border-right-color:transparent;
     }
 
-    .card.red {
-      background: linear-gradient(180deg, #ff202a 0%, #ef111b 100%);
+    .cards{
+      display:grid;
+      gap:10px;
     }
 
-    .card.yellow {
-      background: linear-gradient(180deg, #ffd83f 0%, #efc61a 100%);
+    .card{
+      border-radius:12px;
+      padding:10px 12px 10px 10px;
+      color:#fff;
+      position:relative;
+      overflow:hidden;
+      box-shadow:0 10px 24px rgba(0,0,0,.12);
     }
 
-    .card.green {
-      background: linear-gradient(180deg, #7ce56f 0%, #68cf5d 100%);
+    .card.red{background:linear-gradient(180deg,var(--red),#e0181e)}
+    .card.yellow{background:linear-gradient(180deg,var(--yellow),#e1ba19)}
+    .card.green{background:linear-gradient(180deg,var(--green),#56c84a)}
+
+    .card-grid{
+      display:grid;
+      grid-template-columns:50px 1fr 116px;
+      gap:10px;
+      align-items:center;
     }
 
-    .icon {
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.82);
-      color: rgba(20,34,23,0.70);
-      display: grid;
-      place-items: center;
-      font-size: 24px;
-      font-weight: 900;
+    .icon-wrap{
+      width:46px;
+      height:46px;
+      border-radius:50%;
+      background:rgba(255,255,255,.94);
+      display:grid;
+      place-items:center;
+      flex:none;
     }
 
-    .eyebrow {
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      opacity: 0.96;
-      margin-bottom: 2px;
+    .icon{
+      font-size:22px;
+      line-height:1;
     }
 
-    .value {
-      font-size: 25px;
-      line-height: 1;
-      font-weight: 900;
-      margin-bottom: 6px;
+    .market{
+      font-size:10px;
+      font-weight:700;
+      opacity:.92;
+      text-transform:uppercase;
+      letter-spacing:.03em;
     }
 
-    .change, .sub {
-      font-size: 12px;
-      font-weight: 700;
-      line-height: 1.25;
+    .market small{
+      font-size:9px;
+      text-transform:none;
+      opacity:.9;
     }
 
-    .sub {
-      opacity: 0.95;
-      margin-top: 2px;
+    .value{
+      font-size:18px;
+      line-height:1.05;
+      font-weight:900;
+      margin-top:2px;
+      font-variant-numeric:tabular-nums;
     }
 
-    .right {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 10px;
-      min-width: 108px;
+    .change{
+      font-size:10px;
+      margin-top:5px;
+      font-weight:700;
+      opacity:.96;
     }
 
-    .badge {
-      font-size: 11px;
-      font-weight: 900;
-      text-transform: uppercase;
-      border-radius: 8px;
-      padding: 7px 10px;
-      background: rgba(0,0,0,0.20);
-      white-space: nowrap;
+    .period{
+      font-size:10px;
+      opacity:.9;
+      margin-top:2px;
     }
 
-    .spark {
-      width: 108px;
-      height: 38px;
-      display: grid;
-      place-items: center;
-      color: rgba(255,255,255,0.88);
-      font-size: 11px;
+    .trend{
+      display:flex;
+      flex-direction:column;
+      align-items:stretch;
+      gap:8px;
     }
 
-    .legend {
-      display: flex;
-      justify-content: space-around;
-      gap: 10px;
-      flex-wrap: wrap;
-      color: #425143;
-      font-size: 11px;
-      padding: 10px 10px 0;
+    .badge{
+      align-self:end;
+      padding:4px 8px;
+      border-radius:7px;
+      font-size:10px;
+      font-weight:900;
+      background:rgba(0,0,0,.22);
+      color:#fff;
+      text-transform:uppercase;
     }
 
-    .legend span {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-weight: 700;
+    .sparkline{
+      height:42px;
+      position:relative;
     }
 
-    .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      display: inline-block;
+    .sparkline svg{
+      width:100%;
+      height:100%;
+      display:block;
     }
 
-    .dot.green { background: #2cad37; }
-    .dot.red { background: #e11a24; }
-    .dot.yellow { background: #dfb300; }
+    .sparkline .base{
+      stroke:rgba(255,255,255,.45);
+      stroke-dasharray:3 3;
+      stroke-width:1.4;
+    }
+
+    .sparkline .line{
+      fill:none;
+      stroke:#fff;
+      stroke-width:2.1;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+    }
+
+    .sparkline .end{
+      fill:#fff;
+      stroke:rgba(255,255,255,.2);
+      stroke-width:2;
+    }
+
+    .legend{
+      display:flex;
+      justify-content:center;
+      gap:14px;
+      align-items:center;
+      font-size:10px;
+      color:#454a43;
+      background:#fff;
+      border-radius:14px;
+      padding:8px 10px;
+      border:1px solid #e4e8e0;
+      margin-bottom:6px;
+      flex-wrap:wrap;
+    }
+
+    .legend-item{
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+
+    .legend-dot{
+      width:8px;
+      height:8px;
+      border-radius:50%;
+    }
+
+    .scrollhint{
+      text-align:center;
+      font-size:11px;
+      color:var(--muted);
+      padding-bottom:2px;
+    }
   </style>
 </head>
 <body>
-  <main class="app">
-    <header>
-      <div class="top">
-        <div class="title">
-          <h1>Markets Overview</h1>
-          <p>Live markedsdata · trykk på et kort for detaljer.</p>
+  <div class="frame">
+    <div class="screen">
+      <div class="statusbar"><span>09.41</span><span>▮▮▮ ◔</span></div>
+      <div class="dynamic-island"></div>
+
+      <main class="content">
+        <section class="hero">
+          <div>
+            <h1>Markets Overview</h1>
+            <div class="sub">Live markedsdata · trykk på et kort for detaljer.</div>
+          </div>
+          <button class="update-btn" id="refreshBtn"><span>⟳</span><span>Oppdater</span></button>
+        </section>
+
+        <div class="refresh-box" id="refreshBox">
+          <span class="spinner"></span>
+          <span>Oppdaterer data ...</span>
         </div>
-        <button class="refresh-btn" id="refreshBtn" type="button">
-          <span>⟳</span>
-          <span>Oppdater</span>
-        </button>
-      </div>
 
-      <div class="status-box" id="statusBox">
-        <span>◔</span>
-        <span id="statusText">Updating data ...</span>
-      </div>
-    </header>
+        <section class="cards" id="cards"></section>
 
-    <section class="cards" id="cards"></section>
+        <section class="legend">
+          <div class="legend-item"><span class="legend-dot" style="background:#35b74a"></span>Green = up</div>
+          <div class="legend-item"><span class="legend-dot" style="background:#df1317"></span>Red = down</div>
+          <div class="legend-item"><span class="legend-dot" style="background:#d7ad00"></span>Yellow = same level</div>
+        </section>
 
-    <div class="legend">
-      <span><i class="dot green"></i> Green = up</span>
-      <span><i class="dot red"></i> Red = down</span>
-      <span><i class="dot yellow"></i> Yellow = same level</span>
+        <div class="scrollhint">Bla opp og ned med tommelen for å se alle feltene.</div>
+      </main>
     </div>
-  </main>
+  </div>
 
   <script>
-    const BASE_URL = "https://pj-markedstal.poulj.workers.dev";
+    const refreshBtn = document.getElementById('refreshBtn');
+    const refreshBox = document.getElementById('refreshBox');
+    const cardsEl = document.getElementById('cards');
 
-    const marketConfig = [
-      { key: "vix", label: "VIX", sublabel: "Volatilitet", icon: "🛡️" },
-      { key: "us10y", label: "US10Y", sublabel: "Rente", icon: "🏛️" },
-      { key: "sp500", label: "S&P 500", sublabel: "USA", icon: "📈" },
-      { key: "oil", label: "Olje", sublabel: "WTI", icon: "🩸" },
-      { key: "gold", label: "Gull", sublabel: "Spot", icon: "🪙" },
-      { key: "silver", label: "Sølv", sublabel: "Spot", icon: "🥈" },
-      { key: "bitcoin", label: "Bitcoin", sublabel: "USD", icon: "₿" },
-      { key: "usdNok", label: "USD / NOK", sublabel: "", icon: "💵" }
+    const markets = [
+      {
+        market: 'VIX VOLATILITET',
+        value: '17,1',
+        changeText: '0 (0%)',
+        period: '1 dags endring',
+        icon: '🛡️',
+        reverse: true,
+        changeValue: 0,
+        spark: 'M2 22 L10 21 L18 20 L26 19 L34 20 L42 21 L50 20 L58 19 L66 20 L74 21 L82 20 L90 19 L98 20 L106 19'
+      },
+      {
+        market: 'US10Y RENTE',
+        value: '4,51%',
+        changeText: '0 (0%)',
+        period: '1 dags endring',
+        icon: '🏛️',
+        reverse: true,
+        changeValue: 0,
+        spark: 'M2 18 L10 18 L18 19 L26 19 L34 20 L42 20 L50 20 L58 21 L66 21 L74 21 L82 22 L90 22 L98 22 L106 22'
+      },
+      {
+        market: 'S&P 500 USA',
+        value: '5.297',
+        changeText: '+2,1 (+0,40%)',
+        period: '1 dags endring',
+        icon: '📈',
+        reverse: false,
+        changeValue: 2.1,
+        spark: 'M2 30 L10 28 L18 27 L26 24 L34 22 L42 20 L50 21 L58 18 L66 16 L74 15 L82 14 L90 12 L98 11 L106 10'
+      },
+      {
+        market: 'OLJE WTI',
+        value: '97,34',
+        changeText: '0 (0%)',
+        period: '1 dags endring',
+        icon: '🩸',
+        reverse: false,
+        changeValue: 0,
+        spark: 'M2 22 L10 22 L18 22 L26 21 L34 22 L42 22 L50 21 L58 21 L66 21 L74 20 L82 21 L90 21 L98 20 L106 20'
+      },
+      {
+        market: 'GULL SPOT',
+        value: '2.341',
+        changeText: '+0,10',
+        period: '1 dags endring',
+        icon: '🪙',
+        reverse: false,
+        changeValue: 0.10,
+        spark: 'M2 24 L10 23 L18 23 L26 22 L34 22 L42 21 L50 21 L58 20 L66 20 L74 19 L82 19 L90 18 L98 18 L106 17'
+      },
+      {
+        market: 'SØLV SPOT',
+        value: '27,85',
+        changeText: '+0,30 (+1,09%)',
+        period: '1 dags endring',
+        icon: '🥈',
+        reverse: false,
+        changeValue: 0.30,
+        spark: 'M2 29 L10 27 L18 25 L26 23 L34 22 L42 20 L50 18 L58 17 L66 16 L74 15 L82 13 L90 12 L98 11 L106 10'
+      },
+      {
+        market: 'BITCOIN (USD)',
+        value: '66.820',
+        changeText: '+1.250 (+1,91%)',
+        period: '1 dags endring',
+        icon: '₿',
+        reverse: false,
+        changeValue: 1.25,
+        spark: 'M2 28 L10 24 L18 20 L26 22 L34 18 L42 19 L50 16 L58 18 L66 15 L74 13 L82 14 L90 12 L98 13 L106 11'
+      },
+      {
+        market: 'USD / NOK',
+        value: '9,2428',
+        changeText: '0 (0%)',
+        period: '1 dags endring',
+        icon: '💵',
+        reverse: true,
+        changeValue: 0,
+        spark: 'M2 20 L10 20 L18 20 L26 21 L34 21 L42 21 L50 21 L58 20 L66 20 L74 20 L82 20 L90 20 L98 20 L106 20'
+      }
     ];
 
-    const fallbackData = {
-      vix: { value: "16,7", change: "-0,8 (-4,57%)", trend: "red" },
-      us10y: { value: "4,49%", change: "-0,03 (-0,66%)", trend: "yellow" },
-      sp500: { value: "5.297", change: "+2,1 (+0,40%)", trend: "green" },
-      oil: { value: "78,42", change: "-0,42 (-0,53%)", trend: "red" },
-      gold: { value: "2.341", change: "+0,10", trend: "yellow" },
-      silver: { value: "27,85", change: "+0,30 (+1,09%)", trend: "green" },
-      bitcoin: { value: "66.820", change: "+1.250 (+1,91%)", trend: "green" },
-      usdNok: { value: "10,75", change: "0,00 (0,00%)", trend: "yellow" }
-    };
+    function getState(changeValue, reverse = false) {
+      const num = Number(changeValue);
 
-    const cardsEl = document.getElementById("cards");
-    const refreshBtn = document.getElementById("refreshBtn");
-    const statusBox = document.getElementById("statusBox");
-    const statusText = document.getElementById("statusText");
-
-    function badgeText(trend) {
-      if (trend === "green") return "OPP";
-      if (trend === "red") return "NED";
-      return "SAMME NIVÅ";
-    }
-
-    function detectTrend(value) {
-      const n = Number(String(value).replace(",", ".").replace("%", ""));
-      if (Number.isNaN(n)) return "yellow";
-      if (n > 0) return "green";
-      if (n < 0) return "red";
-      return "yellow";
-    }
-
-    function fmtNumber(value, decimals = 2) {
-      const n = Number(value);
-      if (Number.isNaN(n)) return String(value ?? "-");
-      return n.toLocaleString("no-NO", {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: decimals
-      });
-    }
-
-    function fmtSigned(value, decimals = 2, suffix = "") {
-      const n = Number(value);
-      if (Number.isNaN(n)) return String(value ?? "-");
-      const sign = n > 0 ? "+" : "";
-      return sign + n.toLocaleString("no-NO", {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: decimals
-      }) + suffix;
-    }
-
-    function pick(obj, keys) {
-      for (const key of keys) {
-        if (obj && obj[key] !== undefined && obj[key] !== null) return obj[key];
+      if (!Number.isFinite(num) || Math.abs(num) < 0.0001) {
+        return {
+          colorClass: 'yellow',
+          badge: 'SAMME NIVÅ'
+        };
       }
-      return null;
+
+      if (reverse) {
+        return num > 0
+          ? { colorClass: 'red', badge: 'NED' }
+          : { colorClass: 'green', badge: 'OPP' };
+      }
+
+      return num > 0
+        ? { colorClass: 'green', badge: 'OPP' }
+        : { colorClass: 'red', badge: 'NED' };
     }
 
-    function renderCards(data) {
-      cardsEl.innerHTML = "";
+    function renderCards() {
+      cardsEl.innerHTML = markets.map((item) => {
+        const state = getState(item.changeValue, item.reverse);
 
-      marketConfig.forEach((item) => {
-        const row = data[item.key] || fallbackData[item.key];
-        const card = document.createElement("button");
-        card.type = "button";
-        card.className = `card market-card ${row.trend}`;
-        card.dataset.market = item.label;
-
-        card.innerHTML = `
-          <div class="icon">${item.icon}</div>
-          <div class="content">
-            <div class="eyebrow">${item.label}${item.sublabel ? " " + item.sublabel : ""}</div>
-            <div class="value">${row.value}</div>
-            <div class="change">${row.change}</div>
-            <div class="sub">1 dags endring</div>
-          </div>
-          <div class="right">
-            <div class="badge">${badgeText(row.trend)}</div>
-            <div class="spark">live</div>
-          </div>
+        return `
+          <article class="card ${state.colorClass}">
+            <div class="card-grid">
+              <div class="icon-wrap"><div class="icon">${item.icon}</div></div>
+              <div>
+                <div class="market">${item.market}</div>
+                <div class="value">${item.value}</div>
+                <div class="change">${item.changeText}</div>
+                <div class="period">${item.period}</div>
+              </div>
+              <div class="trend">
+                <div class="badge">${state.badge}</div>
+                <div class="sparkline">
+                  <svg viewBox="0 0 110 42" preserveAspectRatio="none">
+                    <path class="base" d="M0 34 H110"></path>
+                    <path class="line" d="${item.spark}"></path>
+                    <circle class="end" cx="106" cy="20" r="2.8"></circle>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </article>
         `;
-
-        card.addEventListener("click", () => {
-          alert(item.label + " åpnes her. Neste steg er detaljvisning.");
-        });
-
-        cardsEl.appendChild(card);
-      });
+      }).join('');
     }
 
-    async function fetchJson(url) {
-      const res = await fetch(url, { cache: "no-store" });
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      return await res.json();
-    }
-
-    async function loadLiveData() {
-      statusText.textContent = "Updating data ...";
-      statusBox.classList.add("show");
+    refreshBtn.addEventListener('click', () => {
       refreshBtn.disabled = true;
-
-      try {
-        const [vixRes, us10yRes, oilRes, fxRes] = await Promise.all([
-          fetchJson(BASE_URL + "/yahoo?symbol=^VIX"),
-          fetchJson(BASE_URL + "/yahoo?symbol=^TNX"),
-          fetchJson(BASE_URL + "/yahoo?symbol=BZ=F"),
-          fetchJson(BASE_URL + "/fx")
-        ]);
-
-        const liveData = { ...fallbackData };
-
-        const vixPrice = pick(vixRes, ["price", "regularMarketPrice", "value", "close"]);
-        const vixChange = pick(vixRes, ["change", "regularMarketChange", "delta"]);
-        const vixPct = pick(vixRes, ["changePercent", "regularMarketChangePercent", "pct"]);
-        if (vixPrice !== null) {
-          liveData.vix = {
-            value: fmtNumber(vixPrice, 2),
-            change: `${fmtSigned(vixChange, 2)} (${fmtSigned(vixPct, 2, "%")})`,
-            trend: detectTrend(vixChange)
-          };
-        }
-
-        const us10yPrice = pick(us10yRes, ["price", "regularMarketPrice", "value", "close"]);
-        const us10yChange = pick(us10yRes, ["change", "regularMarketChange", "delta"]);
-        const us10yPct = pick(us10yRes, ["changePercent", "regularMarketChangePercent", "pct"]);
-        if (us10yPrice !== null) {
-          liveData.us10y = {
-            value: fmtNumber(us10yPrice, 2) + "%",
-            change: `${fmtSigned(us10yChange, 2)} (${fmtSigned(us10yPct, 2, "%")})`,
-            trend: detectTrend(us10yChange)
-          };
-        }
-
-        const oilPrice = pick(oilRes, ["price", "regularMarketPrice", "value", "close"]);
-        const oilChange = pick(oilRes, ["change", "regularMarketChange", "delta"]);
-        const oilPct = pick(oilRes, ["changePercent", "regularMarketChangePercent", "pct"]);
-        if (oilPrice !== null) {
-          liveData.oil = {
-            value: fmtNumber(oilPrice, 2),
-            change: `${fmtSigned(oilChange, 2)} (${fmtSigned(oilPct, 2, "%")})`,
-            trend: detectTrend(oilChange)
-          };
-        }
-
-        const usdNokPrice = pick(fxRes, ["usdNok", "rate", "price", "value"]);
-        const usdNokChange = pick(fxRes, ["change", "delta", "diff"]);
-        const usdNokPct = pick(fxRes, ["changePercent", "pct", "percent"]);
-        if (usdNokPrice !== null) {
-          liveData.usdNok = {
-            value: fmtNumber(usdNokPrice, 4),
-            change: usdNokChange !== null
-              ? `${fmtSigned(usdNokChange, 4)}${usdNokPct !== null ? ` (${fmtSigned(usdNokPct, 2, "%")})` : ""}`
-              : "Live",
-            trend: detectTrend(usdNokChange ?? 0)
-          };
-        }
-
-        renderCards(liveData);
-        statusText.textContent = "Data oppdatert";
-      } catch (error) {
-        renderCards(fallbackData);
-        statusText.textContent = "Kunne ikke hente live-data";
-      }
+      refreshBtn.innerHTML = '<span>⟳</span><span>Oppdaterer ...</span>';
+      refreshBox.style.opacity = '1';
 
       setTimeout(() => {
-        statusBox.classList.remove("show");
+        renderCards();
         refreshBtn.disabled = false;
-      }, 2000);
-    }
+        refreshBtn.innerHTML = '<span>⟳</span><span>Oppdater</span>';
+      }, 1200);
+    });
 
-    refreshBtn.addEventListener("click", loadLiveData);
-    renderCards(fallbackData);
-    loadLiveData();
+    renderCards();
   </script>
 </body>
 </html>

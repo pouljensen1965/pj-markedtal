@@ -1,3 +1,14 @@
+Ja — selvfølgelig. Her kommer den nye kode direkte her i beskeden, så du kan kopiere den med det samme ind i .index.html
+
+Denne version har:
+
+USD/NOK-kortet med,
+
+alle felter som klikbare knapper,
+
+og en lille besked når man trykker på et kort, så du kan se at klik virker.
+
+xml
 <!DOCTYPE html>
 <html lang="no">
 <head>
@@ -30,7 +41,7 @@
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
@@ -117,6 +128,9 @@
     }
 
     .card {
+      border: none;
+      width: 100%;
+      text-align: left;
       border-radius: 18px;
       padding: 14px 14px 12px;
       color: #fff;
@@ -126,6 +140,18 @@
       align-items: center;
       box-shadow: var(--shadow);
       border: 1px solid rgba(255,255,255,0.18);
+      cursor: pointer;
+      transition: transform 140ms ease, box-shadow 140ms ease, filter 140ms ease;
+    }
+
+    .card:active {
+      transform: scale(0.985);
+      filter: brightness(0.98);
+    }
+
+    .card:focus-visible {
+      outline: 3px solid rgba(20,34,23,0.28);
+      outline-offset: 3px;
     }
 
     .card.red { background: linear-gradient(180deg, #ff1e28 0%, var(--red) 100%); }
@@ -170,7 +196,10 @@
       line-height: 1.25;
     }
 
-    .sub { opacity: 0.95; margin-top: 2px; }
+    .sub {
+      opacity: 0.95;
+      margin-top: 2px;
+    }
 
     .right {
       display: flex;
@@ -252,7 +281,7 @@
     </header>
 
     <section class="cards">
-      <article class="card red">
+      <button class="card red market-card" type="button" data-market="VIX">
         <div class="icon">🛡️</div>
         <div class="content">
           <div class="eyebrow">VIX Volatilitet</div>
@@ -270,9 +299,9 @@
             </svg>
           </div>
         </div>
-      </article>
+      </button>
 
-      <article class="card yellow">
+      <button class="card yellow market-card" type="button" data-market="US10Y">
         <div class="icon">🏛️</div>
         <div class="content">
           <div class="eyebrow">US10Y Rente</div>
@@ -290,9 +319,9 @@
             </svg>
           </div>
         </div>
-      </article>
+      </button>
 
-      <article class="card green">
+      <button class="card green market-card" type="button" data-market="S&P 500">
         <div class="icon">📈</div>
         <div class="content">
           <div class="eyebrow">S&amp;P 500 USA</div>
@@ -310,9 +339,9 @@
             </svg>
           </div>
         </div>
-      </article>
+      </button>
 
-      <article class="card red">
+      <button class="card red market-card" type="button" data-market="Olje">
         <div class="icon">🩸</div>
         <div class="content">
           <div class="eyebrow">Olje WTI</div>
@@ -330,9 +359,9 @@
             </svg>
           </div>
         </div>
-      </article>
+      </button>
 
-      <article class="card yellow">
+      <button class="card yellow market-card" type="button" data-market="Gull">
         <div class="icon">🪙</div>
         <div class="content">
           <div class="eyebrow">Gull Spot</div>
@@ -350,9 +379,9 @@
             </svg>
           </div>
         </div>
-      </article>
+      </button>
 
-      <article class="card green">
+      <button class="card green market-card" type="button" data-market="Sølv">
         <div class="icon">🥈</div>
         <div class="content">
           <div class="eyebrow">Sølv Spot</div>
@@ -370,9 +399,9 @@
             </svg>
           </div>
         </div>
-      </article>
+      </button>
 
-      <article class="card green">
+      <button class="card green market-card" type="button" data-market="Bitcoin">
         <div class="icon">₿</div>
         <div class="content">
           <div class="eyebrow">Bitcoin (USD)</div>
@@ -390,7 +419,27 @@
             </svg>
           </div>
         </div>
-      </article>
+      </button>
+
+      <button class="card yellow market-card" type="button" data-market="USD/NOK">
+        <div class="icon">💵</div>
+        <div class="content">
+          <div class="eyebrow">USD / NOK</div>
+          <div class="value">10,75</div>
+          <div class="change">0,00 (0,00%)</div>
+          <div class="sub">1 dags endring</div>
+        </div>
+        <div class="right">
+          <div class="badge">Samme nivå</div>
+          <div class="spark">
+            <svg viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M2 31H118" stroke="rgba(255,255,255,0.45)" stroke-width="1.5" stroke-dasharray="3 4"/>
+              <path d="M2 22L12 22L22 21L32 22L42 22L52 21L62 22L72 22L82 21L92 22L102 22L112 21L118 21" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="118" cy="21" r="3.5" fill="white"/>
+            </svg>
+          </div>
+        </div>
+      </button>
     </section>
 
     <div class="legend">
@@ -401,16 +450,24 @@
   </main>
 
   <script>
-    const refreshBtn = document.getElementById('refreshBtn');
-    const statusBox = document.getElementById('statusBox');
+    const refreshBtn = document.getElementById("refreshBtn");
+    const statusBox = document.getElementById("statusBox");
+    const marketCards = document.querySelectorAll(".market-card");
 
-    refreshBtn.addEventListener('click', () => {
-      statusBox.classList.add('show');
+    refreshBtn.addEventListener("click", () => {
+      statusBox.classList.add("show");
       refreshBtn.disabled = true;
       setTimeout(() => {
-        statusBox.classList.remove('show');
+        statusBox.classList.remove("show");
         refreshBtn.disabled = false;
       }, 2000);
+    });
+
+    marketCards.forEach((card) => {
+      card.addEventListener("click", () => {
+        const marketName = card.dataset.market;
+        alert(marketName + " åpnes her. Neste steg er å koble dette til live-data og detaljvisning.");
+      });
     });
   </script>
 </body>

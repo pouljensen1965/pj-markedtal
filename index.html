@@ -1,14 +1,13 @@
 <!DOCTYPE html>
 <html lang="no">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Markets Overview</title>
-  <link rel="preconnect" href="https://api.fontshare.com" />
-  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet" />
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:#e9ebe5;
+      --bg:#ebeae3;
       --phone:#111113;
       --screen:#f6f7f2;
       --text:#202320;
@@ -119,6 +118,11 @@
       cursor:pointer;
     }
 
+    .update-btn:disabled{
+      opacity:.7;
+      cursor:default;
+    }
+
     .refresh-box{
       background:#edf1ec;
       border:1px solid #dde4db;
@@ -138,6 +142,34 @@
       border-radius:50%;
       border:2px solid #7a8377;
       border-right-color:transparent;
+      animation:spin 1s linear infinite;
+    }
+
+    @keyframes spin{
+      to{transform:rotate(360deg)}
+    }
+
+    .morgen{
+      background:#fff;
+      border:1px solid #e3e8df;
+      border-radius:12px;
+      padding:12px 14px;
+      box-shadow:0 8px 20px rgba(0,0,0,.05);
+    }
+
+    .morgen .label{
+      font-size:10px;
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:var(--muted);
+      margin-bottom:4px;
+    }
+
+    .morgen .line{
+      font-size:14px;
+      font-weight:700;
+      line-height:1.3;
     }
 
     .cards{
@@ -297,6 +329,10 @@
       color:var(--muted);
       padding-bottom:2px;
     }
+
+    @media (max-width:380px){
+      .card-grid{grid-template-columns:46px 1fr 108px}
+    }
   </style>
 </head>
 <body>
@@ -316,8 +352,13 @@
 
         <div class="refresh-box" id="refreshBox">
           <span class="spinner"></span>
-          <span>Oppdaterer data ...</span>
+          <span id="refreshText">Oppdaterer data ...</span>
         </div>
+
+        <section class="morgen">
+          <div class="label">Morgenstatus</div>
+          <div class="line" id="morgenLine">Laster markedsbilde ...</div>
+        </section>
 
         <section class="cards" id="cards"></section>
 
@@ -333,101 +374,164 @@
   </div>
 
   <script>
+    const WORKER_BASE = 'https://pj-markedstal.poulj.workers.dev';
+
     const refreshBtn = document.getElementById('refreshBtn');
     const refreshBox = document.getElementById('refreshBox');
+    const refreshText = document.getElementById('refreshText');
     const cardsEl = document.getElementById('cards');
+    const morgenLine = document.getElementById('morgenLine');
 
-    const markets = [
+    const marketConfig = [
       {
+        key: 'vix',
         market: 'VIX VOLATILITET',
-        value: '17,1',
-        changeText: '0 (0%)',
-        period: '1 dags endring',
         icon: '🛡️',
+        endpoint: `${WORKER_BASE}/yahoo?symbol=%5EVIX`,
         reverse: true,
-        changeValue: 0,
-        spark: 'M2 22 L10 21 L18 20 L26 19 L34 20 L42 21 L50 20 L58 19 L66 20 L74 21 L82 20 L90 19 L98 20 L106 19'
+        type: 'number',
+        decimals: 1,
+        spark: 'M2 30 L10 27 L18 26 L26 24 L34 22 L42 24 L50 21 L58 18 L66 20 L74 17 L82 18 L90 16 L98 17 L106 15'
       },
       {
+        key: 'us10y',
         market: 'US10Y RENTE',
-        value: '4,51%',
-        changeText: '0 (0%)',
-        period: '1 dags endring',
         icon: '🏛️',
+        endpoint: `${WORKER_BASE}/yahoo?symbol=%5ETNX`,
         reverse: true,
-        changeValue: 0,
-        spark: 'M2 18 L10 18 L18 19 L26 19 L34 20 L42 20 L50 20 L58 21 L66 21 L74 21 L82 22 L90 22 L98 22 L106 22'
+        type: 'percent_from_tnx',
+        decimals: 2,
+        spark: 'M2 14 L10 15 L18 16 L26 16 L34 17 L42 18 L50 19 L58 20 L66 21 L74 22 L82 23 L90 24 L98 25 L106 26'
       },
       {
+        key: 'sp500',
         market: 'S&P 500 USA',
-        value: '5.297',
-        changeText: '+2,1 (+0,40%)',
-        period: '1 dags endring',
         icon: '📈',
+        endpoint: `${WORKER_BASE}/yahoo?symbol=%5EGSPC`,
         reverse: false,
-        changeValue: 2.1,
-        spark: 'M2 30 L10 28 L18 27 L26 24 L34 22 L42 20 L50 21 L58 18 L66 16 L74 15 L82 14 L90 12 L98 11 L106 10'
+        type: 'number',
+        decimals: 0,
+        spark: 'M2 28 L10 26 L18 25 L26 23 L34 21 L42 20 L50 18 L58 16 L66 17 L74 14 L82 13 L90 11 L98 12 L106 10'
       },
       {
+        key: 'oil',
         market: 'OLJE WTI',
-        value: '97,34',
-        changeText: '0 (0%)',
-        period: '1 dags endring',
         icon: '🩸',
+        endpoint: `${WORKER_BASE}/yahoo?symbol=CL%3DF`,
         reverse: false,
-        changeValue: 0,
-        spark: 'M2 22 L10 22 L18 22 L26 21 L34 22 L42 22 L50 21 L58 21 L66 21 L74 20 L82 21 L90 21 L98 20 L106 20'
+        type: 'number',
+        decimals: 2,
+        spark: 'M2 26 L10 24 L18 22 L26 21 L34 19 L42 20 L50 18 L58 17 L66 18 L74 16 L82 17 L90 15 L98 16 L106 14'
       },
       {
+        key: 'gold',
         market: 'GULL SPOT',
-        value: '2.341',
-        changeText: '+0,10',
-        period: '1 dags endring',
         icon: '🪙',
+        endpoint: `${WORKER_BASE}/yahoo?symbol=GC%3DF`,
         reverse: false,
-        changeValue: 0.10,
-        spark: 'M2 24 L10 23 L18 23 L26 22 L34 22 L42 21 L50 21 L58 20 L66 20 L74 19 L82 19 L90 18 L98 18 L106 17'
+        type: 'number',
+        decimals: 0,
+        spark: 'M2 24 L10 24 L18 23 L26 22 L34 22 L42 21 L50 20 L58 20 L66 19 L74 19 L82 18 L90 18 L98 17 L106 17'
       },
       {
+        key: 'silver',
         market: 'SØLV SPOT',
-        value: '27,85',
-        changeText: '+0,30 (+1,09%)',
-        period: '1 dags endring',
         icon: '🥈',
+        endpoint: `${WORKER_BASE}/yahoo?symbol=SI%3DF`,
         reverse: false,
-        changeValue: 0.30,
-        spark: 'M2 29 L10 27 L18 25 L26 23 L34 22 L42 20 L50 18 L58 17 L66 16 L74 15 L82 13 L90 12 L98 11 L106 10'
+        type: 'number',
+        decimals: 2,
+        spark: 'M2 29 L10 27 L18 26 L26 24 L34 22 L42 21 L50 19 L58 18 L66 17 L74 15 L82 14 L90 13 L98 12 L106 10'
       },
       {
+        key: 'bitcoin',
         market: 'BITCOIN (USD)',
-        value: '66.820',
-        changeText: '+1.250 (+1,91%)',
-        period: '1 dags endring',
         icon: '₿',
+        endpoint: `${WORKER_BASE}/yahoo?symbol=BTC-USD`,
         reverse: false,
-        changeValue: 1.25,
-        spark: 'M2 28 L10 24 L18 20 L26 22 L34 18 L42 19 L50 16 L58 18 L66 15 L74 13 L82 14 L90 12 L98 13 L106 11'
+        type: 'number',
+        decimals: 0,
+        spark: 'M2 30 L10 26 L18 22 L26 24 L34 20 L42 18 L50 16 L58 18 L66 14 L74 12 L82 13 L90 11 L98 12 L106 9'
       },
       {
+        key: 'usdnok',
         market: 'USD / NOK',
-        value: '9,2428',
-        changeText: '0 (0%)',
-        period: '1 dags endring',
         icon: '💵',
+        endpoint: `${WORKER_BASE}/yahoo?symbol=NOK%3DX`,
         reverse: true,
-        changeValue: 0,
-        spark: 'M2 20 L10 20 L18 20 L26 21 L34 21 L42 21 L50 21 L58 20 L66 20 L74 20 L82 20 L90 20 L98 20 L106 20'
+        type: 'inverse_fx',
+        decimals: 4,
+        spark: 'M2 18 L10 19 L18 19 L26 20 L34 20 L42 21 L50 21 L58 22 L66 22 L74 23 L82 23 L90 24 L98 24 L106 25'
       }
     ];
+
+    function formatNumberNo(value, decimals = 0) {
+      return Number(value).toLocaleString('no-NO', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+      });
+    }
+
+    function parseWorkerNumber(data) {
+      const candidates = [
+        data?.price,
+        data?.regularMarketPrice,
+        data?.currentPrice,
+        data?.value,
+        data?.close,
+        data?.quoteResponse?.result?.[0]?.regularMarketPrice
+      ];
+
+      for (const candidate of candidates) {
+        const num = Number(candidate);
+        if (Number.isFinite(num)) return num;
+      }
+
+      return null;
+    }
+
+    function parseWorkerChange(data) {
+      const valueCandidates = [
+        data?.change,
+        data?.regularMarketChange,
+        data?.priceChange,
+        data?.quoteResponse?.result?.[0]?.regularMarketChange
+      ];
+
+      const pctCandidates = [
+        data?.changePercent,
+        data?.regularMarketChangePercent,
+        data?.percentChange,
+        data?.quoteResponse?.result?.[0]?.regularMarketChangePercent
+      ];
+
+      let change = null;
+      let changePct = null;
+
+      for (const candidate of valueCandidates) {
+        const num = Number(candidate);
+        if (Number.isFinite(num)) {
+          change = num;
+          break;
+        }
+      }
+
+      for (const candidate of pctCandidates) {
+        const num = Number(candidate);
+        if (Number.isFinite(num)) {
+          changePct = num;
+          break;
+        }
+      }
+
+      return { change, changePct };
+    }
 
     function getState(changeValue, reverse = false) {
       const num = Number(changeValue);
 
       if (!Number.isFinite(num) || Math.abs(num) < 0.0001) {
-        return {
-          colorClass: 'yellow',
-          badge: 'SAMME NIVÅ'
-        };
+        return { colorClass: 'yellow', badge: 'SAMME NIVÅ' };
       }
 
       if (reverse) {
@@ -441,9 +545,87 @@
         : { colorClass: 'red', badge: 'NED' };
     }
 
-    function renderCards() {
-      cardsEl.innerHTML = markets.map((item) => {
-        const state = getState(item.changeValue, item.reverse);
+    function buildChangeText(change, changePct, decimals = 2) {
+      const hasChange = Number.isFinite(change);
+      const hasPct = Number.isFinite(changePct);
+
+      if (!hasChange && !hasPct) return 'Live';
+
+      const sign = hasChange && change > 0 ? '+' : '';
+      const changeText = hasChange
+        ? `${sign}${formatNumberNo(change, decimals)}`
+        : '';
+
+      const pctSign = hasPct && changePct > 0 ? '+' : '';
+      const pctText = hasPct
+        ? ` (${pctSign}${formatNumberNo(changePct, 2)}%)`
+        : '';
+
+      return `${changeText}${pctText}`.trim();
+    }
+
+    function buildValue(rawValue, config) {
+      if (!Number.isFinite(rawValue)) return '—';
+
+      if (config.type === 'percent_from_tnx') {
+        return `${formatNumberNo(rawValue / 10, config.decimals)}%`;
+      }
+
+      if (config.type === 'inverse_fx') {
+        return formatNumberNo(1 / rawValue, config.decimals);
+      }
+
+      return formatNumberNo(rawValue, config.decimals);
+    }
+
+    function buildNormalizedChanges(rawValue, rawChange, rawChangePct, config) {
+      let value = rawValue;
+      let change = rawChange;
+      let changePct = rawChangePct;
+
+      if (config.type === 'percent_from_tnx') {
+        value = Number.isFinite(rawValue) ? rawValue / 10 : rawValue;
+        change = Number.isFinite(rawChange) ? rawChange / 10 : rawChange;
+      }
+
+      if (config.type === 'inverse_fx') {
+        if (Number.isFinite(rawValue) && rawValue !== 0) {
+          const inverseValue = 1 / rawValue;
+          const previous = Number.isFinite(rawChange) ? (rawValue - rawChange) : null;
+          value = inverseValue;
+
+          if (Number.isFinite(previous) && previous !== 0) {
+            const inversePrev = 1 / previous;
+            change = inverseValue - inversePrev;
+            changePct = ((inverseValue / inversePrev) - 1) * 100;
+          }
+        }
+      }
+
+      return { value, change, changePct };
+    }
+
+    async function fetchMarket(config) {
+      const response = await fetch(config.endpoint, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const data = await response.json();
+      const rawValue = parseWorkerNumber(data);
+      const { change: rawChange, changePct: rawChangePct } = parseWorkerChange(data);
+      const normalized = buildNormalizedChanges(rawValue, rawChange, rawChangePct, config);
+
+      return {
+        ...config,
+        valueText: buildValue(rawValue, config),
+        changeText: buildChangeText(normalized.change, normalized.changePct, config.type === 'inverse_fx' ? 4 : (config.decimals > 2 ? config.decimals : 2)),
+        period: '1 dags endring',
+        signalValue: normalized.changePct ?? normalized.change ?? 0
+      };
+    }
+
+    function renderCards(items) {
+      cardsEl.innerHTML = items.map((item) => {
+        const state = getState(item.signalValue, item.reverse);
 
         return `
           <article class="card ${state.colorClass}">
@@ -451,7 +633,7 @@
               <div class="icon-wrap"><div class="icon">${item.icon}</div></div>
               <div>
                 <div class="market">${item.market}</div>
-                <div class="value">${item.value}</div>
+                <div class="value">${item.valueText}</div>
                 <div class="change">${item.changeText}</div>
                 <div class="period">${item.period}</div>
               </div>
@@ -471,19 +653,51 @@
       }).join('');
     }
 
-    refreshBtn.addEventListener('click', () => {
+    function buildMorningText(items) {
+      const lookup = Object.fromEntries(items.map(item => [item.key, item]));
+      const parts = [];
+
+      if (lookup.vix) {
+        const vixState = getState(lookup.vix.signalValue, true).badge.toLowerCase();
+        parts.push(`frykt ${vixState}`);
+      }
+
+      if (lookup.us10y) {
+        const rateState = getState(lookup.us10y.signalValue, true).badge.toLowerCase();
+        parts.push(`rente ${rateState}`);
+      }
+
+      if (lookup.sp500) {
+        const spState = getState(lookup.sp500.signalValue, false).badge.toLowerCase();
+        parts.push(`aksjer ${spState}`);
+      }
+
+      return parts.length ? parts.join(', ') + '.' : 'Markedene oppdatert.';
+    }
+
+    async function loadMarkets() {
       refreshBtn.disabled = true;
       refreshBtn.innerHTML = '<span>⟳</span><span>Oppdaterer ...</span>';
-      refreshBox.style.opacity = '1';
+      refreshText.textContent = 'Oppdaterer data ...';
 
-      setTimeout(() => {
-        renderCards();
+      try {
+        const results = await Promise.all(marketConfig.map(fetchMarket));
+        renderCards(results);
+        morgenLine.textContent = buildMorningText(results);
+        refreshText.textContent = 'Data oppdatert';
+      } catch (error) {
+        console.error(error);
+        refreshText.textContent = 'Kunne ikke hente live-data';
+        morgenLine.textContent = 'Live-data er midlertidig utilgjengelig.';
+      } finally {
         refreshBtn.disabled = false;
         refreshBtn.innerHTML = '<span>⟳</span><span>Oppdater</span>';
-      }, 1200);
-    });
+      }
+    }
 
-    renderCards();
+    refreshBtn.addEventListener('click', loadMarkets);
+
+    loadMarkets();
   </script>
 </body>
 </html>

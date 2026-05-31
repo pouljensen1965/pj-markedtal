@@ -13,7 +13,6 @@
       --green:#69d45d;
       --red:#ff1f26;
       --yellow:#f2cb27;
-      --shadow:0 10px 30px rgba(0,0,0,.08);
     }
 
     *{box-sizing:border-box}
@@ -479,17 +478,10 @@
 
     function buildChangeText(change, changePct, decimals = 2) {
       const hasChange = Number.isFinite(change);
-      const hasPct = Number.isFinite(changePct);
+      if (!hasChange) return '—';
 
-      if (!hasChange && !hasPct) return '—';
-
-      const sign = hasChange && change > 0 ? '+' : '';
-      const valueText = hasChange ? `${sign}${formatNumberNo(change, decimals)}` : '';
-
-      const pctSign = hasPct && changePct > 0 ? '+' : '';
-      const pctText = hasPct ? ` (${pctSign}${formatNumberNo(changePct, 2)}%)` : '';
-
-      return `${valueText}${pctText}`.trim();
+      const sign = change > 0 ? '+' : '';
+      return `${sign}${formatNumberNo(change, decimals)}`;
     }
 
     async function fetchMarket(config) {

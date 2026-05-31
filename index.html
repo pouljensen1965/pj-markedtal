@@ -38,6 +38,12 @@
       align-items:flex-start;
       gap:12px;
       margin-top:8px;
+      position:sticky;
+      top:0;
+      z-index:10;
+      background:var(--bg);
+      padding-top:8px;
+      padding-bottom:14px;
     }
 
     h1{
@@ -83,7 +89,16 @@
     .cards{
       display:grid;
       gap:14px;
-      margin-top:22px;
+      margin-top:8px;
+    }
+
+    .card-btn{
+      border:0;
+      width:100%;
+      text-align:left;
+      padding:0;
+      background:transparent;
+      cursor:pointer;
     }
 
     .card{
@@ -273,13 +288,24 @@
 
     const marketConfig = [
       {
+        key: 'oslobors',
+        market: 'OSLO BØRS',
+        icon: '🇳🇴',
+        endpoint: `${WORKER_BASE}/yahoo?symbol=OSEBX.OL`,
+        reverse: false,
+        type: 'number',
+        decimals: 2,
+        url: '#oslobors'
+      },
+      {
         key: 'vix',
         market: 'VIX VOLATILITET',
         icon: '🛡️',
         endpoint: `${WORKER_BASE}/yahoo?symbol=%5EVIX`,
         reverse: true,
         type: 'number',
-        decimals: 1
+        decimals: 1,
+        url: '#vix'
       },
       {
         key: 'us10y',
@@ -288,7 +314,8 @@
         endpoint: `${WORKER_BASE}/yahoo?symbol=%5ETNX`,
         reverse: true,
         type: 'tnx_percent',
-        decimals: 2
+        decimals: 2,
+        url: '#us10y'
       },
       {
         key: 'sp500',
@@ -297,7 +324,8 @@
         endpoint: `${WORKER_BASE}/yahoo?symbol=%5EGSPC`,
         reverse: false,
         type: 'number',
-        decimals: 0
+        decimals: 0,
+        url: '#sp500'
       },
       {
         key: 'oil',
@@ -306,7 +334,8 @@
         endpoint: `${WORKER_BASE}/yahoo?symbol=CL%3DF`,
         reverse: false,
         type: 'number',
-        decimals: 2
+        decimals: 2,
+        url: '#oil'
       },
       {
         key: 'gold',
@@ -315,7 +344,8 @@
         endpoint: `${WORKER_BASE}/yahoo?symbol=GC%3DF`,
         reverse: false,
         type: 'number',
-        decimals: 0
+        decimals: 0,
+        url: '#gold'
       },
       {
         key: 'silver',
@@ -324,7 +354,8 @@
         endpoint: `${WORKER_BASE}/yahoo?symbol=SI%3DF`,
         reverse: false,
         type: 'number',
-        decimals: 2
+        decimals: 2,
+        url: '#silver'
       },
       {
         key: 'bitcoin',
@@ -333,7 +364,8 @@
         endpoint: `${WORKER_BASE}/yahoo?symbol=BTC-USD`,
         reverse: false,
         type: 'number',
-        decimals: 0
+        decimals: 0,
+        url: '#bitcoin'
       },
       {
         key: 'usdnok',
@@ -342,7 +374,8 @@
         endpoint: `${WORKER_BASE}/yahoo?symbol=USDNOK%3DX`,
         reverse: true,
         type: 'number',
-        decimals: 4
+        decimals: 4,
+        url: '#usdnok'
       }
     ];
 
@@ -505,24 +538,30 @@
         const state = getState(item.signalValue, item.reverse);
 
         return `
-          <article class="card ${state.colorClass}">
-            <div class="card-grid">
-              <div class="icon-wrap"><div class="icon">${item.icon}</div></div>
-              <div>
-                <div class="market">${item.market}</div>
-                <div class="value">${item.valueText}</div>
-                <div class="meta-stack">
-                  <div class="meta-line"><span class="label">I går</span>${item.previousText}</div>
-                  <div class="meta-line"><span class="label">1 dags endring</span>${item.changeText}</div>
+          <button class="card-btn" type="button" onclick="openCard('${item.url}')">
+            <article class="card ${state.colorClass}">
+              <div class="card-grid">
+                <div class="icon-wrap"><div class="icon">${item.icon}</div></div>
+                <div>
+                  <div class="market">${item.market}</div>
+                  <div class="value">${item.valueText}</div>
+                  <div class="meta-stack">
+                    <div class="meta-line"><span class="label">I går</span>${item.previousText}</div>
+                    <div class="meta-line"><span class="label">1 dags endring</span>${item.changeText}</div>
+                  </div>
+                </div>
+                <div class="trend">
+                  <div class="status-mark" aria-hidden="true"></div>
                 </div>
               </div>
-              <div class="trend">
-                <div class="status-mark" aria-hidden="true"></div>
-              </div>
-            </div>
-          </article>
+            </article>
+          </button>
         `;
       }).join('');
+    }
+
+    function openCard(url) {
+      window.location.hash = url.replace('#', '');
     }
 
     async function loadMarkets() {

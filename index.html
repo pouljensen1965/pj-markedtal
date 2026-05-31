@@ -16,7 +16,6 @@
       --panel:#ffffff;
       --border:#e4e8e0;
     }
-
     *{box-sizing:border-box}
     html,body{margin:0;padding:0}
     body{
@@ -26,409 +25,118 @@
       -webkit-font-smoothing:antialiased;
       text-rendering:optimizeLegibility;
     }
-
-    .app{
-      width:100%;
-      max-width:100%;
-      min-height:100vh;
-      padding:20px 16px 40px;
-    }
-
+    .app{width:100%;max-width:100%;min-height:100vh;padding:20px 16px 40px}
     .hero{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:12px;
-      margin-top:8px;
-      position:sticky;
-      top:0;
-      z-index:20;
-      background:var(--bg);
-      padding-top:8px;
-      padding-bottom:14px;
+      display:flex;justify-content:space-between;align-items:flex-start;gap:12px;
+      margin-top:8px;position:sticky;top:0;z-index:20;background:var(--bg);
+      padding-top:8px;padding-bottom:14px;
     }
-
     h1,h2,h3,p{margin:0}
-
-    h1{
-      font-size:28px;
-      line-height:1.05;
-      font-weight:900;
-      letter-spacing:-0.03em;
+    h1{font-size:28px;line-height:1.05;font-weight:900;letter-spacing:-0.03em}
+    .sub{font-size:16px;color:var(--muted);margin-top:8px;line-height:1.35;max-width:220px}
+    .update-btn,.back-btn{
+      border:0;background:#28b24a;color:#fff;border-radius:14px;padding:14px 18px;
+      min-width:120px;min-height:52px;font-size:16px;font-weight:800;display:flex;
+      align-items:center;justify-content:center;gap:8px;box-shadow:0 10px 25px rgba(40,178,74,.24);
+      cursor:pointer;flex:none;
     }
-
-    .sub{
-      font-size:16px;
-      color:var(--muted);
-      margin-top:8px;
-      line-height:1.35;
-      max-width:220px;
-    }
-
-    .update-btn,
-    .back-btn{
-      border:0;
-      background:#28b24a;
-      color:#fff;
-      border-radius:14px;
-      padding:14px 18px;
-      min-width:120px;
-      min-height:52px;
-      font-size:16px;
-      font-weight:800;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-      box-shadow:0 10px 25px rgba(40,178,74,.24);
-      cursor:pointer;
-      flex:none;
-    }
-
-    .back-btn{
-      min-width:auto;
-      background:#1d8e3b;
-    }
-
-    .update-btn:disabled{
-      opacity:.75;
-      cursor:default;
-    }
-
+    .back-btn{min-width:auto;background:#1d8e3b}
+    .update-btn:disabled{opacity:.75;cursor:default}
     .screen{display:none}
     .screen.active{display:block}
-
-    .cards{
-      display:grid;
-      gap:14px;
-      margin-top:8px;
-    }
-
-    .card-btn{
-      border:0;
-      width:100%;
-      text-align:left;
-      padding:0;
-      background:transparent;
-      cursor:pointer;
-    }
-
+    .cards{display:grid;gap:14px;margin-top:8px}
+    .card-btn{border:0;width:100%;text-align:left;padding:0;background:transparent;cursor:pointer}
     .card{
-      border-radius:22px;
-      padding:16px 16px 14px 14px;
-      color:#fff;
-      position:relative;
-      overflow:hidden;
+      border-radius:22px;padding:16px 16px 14px 14px;color:#fff;position:relative;overflow:hidden;
       box-shadow:0 12px 28px rgba(0,0,0,.12);
     }
-
     .card.red{background:linear-gradient(180deg,var(--red),#e0181e)}
     .card.yellow{background:linear-gradient(180deg,var(--yellow),#e1ba19)}
     .card.green{background:linear-gradient(180deg,var(--green),#56c84a)}
-
-    .card-grid{
-      display:grid;
-      grid-template-columns:64px 1fr 116px;
-      gap:12px;
-      align-items:center;
-    }
-
+    .card-grid{display:grid;grid-template-columns:64px 1fr 116px;gap:12px;align-items:center}
     .icon-wrap{
-      width:58px;
-      height:58px;
-      border-radius:50%;
-      background:rgba(255,255,255,.94);
-      display:grid;
-      place-items:center;
-      flex:none;
+      width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.94);
+      display:grid;place-items:center;flex:none;
     }
-
-    .icon{
-      font-size:28px;
-      line-height:1;
-      color:#5f685c;
-      font-weight:900;
-    }
-
-    .market{
-      font-size:13px;
-      font-weight:800;
-      opacity:.95;
-      text-transform:uppercase;
-      letter-spacing:.03em;
-    }
-
+    .icon{font-size:28px;line-height:1;color:#5f685c;font-weight:900}
+    .market{font-size:13px;font-weight:800;opacity:.95;text-transform:uppercase;letter-spacing:.03em}
     .value{
-      font-size:28px;
-      line-height:1.02;
-      font-weight:900;
-      margin-top:4px;
-      font-variant-numeric:tabular-nums;
-      letter-spacing:-0.03em;
+      font-size:28px;line-height:1.02;font-weight:900;margin-top:4px;
+      font-variant-numeric:tabular-nums;letter-spacing:-0.03em;
     }
-
-    .meta-stack{
-      margin-top:8px;
-      display:grid;
-      gap:2px;
-    }
-
-    .meta-line{
-      font-size:12px;
-      line-height:1.18;
-      font-weight:700;
-      opacity:.96;
-      font-variant-numeric:tabular-nums;
-    }
-
-    .meta-line .label{
-      opacity:.88;
-      margin-right:6px;
-    }
-
-    .trend{
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      min-height:52px;
-    }
-
-    .status-mark{
-      width:100%;
-      max-width:96px;
-      position:relative;
-      height:28px;
-    }
-
+    .meta-stack{margin-top:8px;display:grid;gap:2px}
+    .meta-line{font-size:12px;line-height:1.18;font-weight:700;opacity:.96;font-variant-numeric:tabular-nums}
+    .meta-line .label{opacity:.88;margin-right:6px}
+    .trend{display:flex;justify-content:center;align-items:center;min-height:52px}
+    .status-mark{width:100%;max-width:96px;position:relative;height:28px}
     .status-mark::before{
-      content:"";
-      position:absolute;
-      left:0;
-      right:0;
-      top:50%;
-      transform:translateY(-50%);
+      content:"";position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);
       border-top:2px dashed rgba(255,255,255,.52);
     }
-
     .status-mark::after{
-      content:"";
-      position:absolute;
-      right:0;
-      top:50%;
-      width:8px;
-      height:8px;
-      border-radius:50%;
-      transform:translateY(-50%);
-      background:#fff;
-      box-shadow:0 0 0 3px rgba(255,255,255,.16);
+      content:"";position:absolute;right:0;top:50%;width:8px;height:8px;border-radius:50%;
+      transform:translateY(-50%);background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.16);
     }
-
     .legend{
-      display:flex;
-      justify-content:center;
-      gap:16px;
-      align-items:center;
-      font-size:13px;
-      color:#454a43;
-      background:#fff;
-      border-radius:18px;
-      padding:12px 14px;
-      border:1px solid #e4e8e0;
-      margin-top:18px;
-      flex-wrap:wrap;
+      display:flex;justify-content:center;gap:16px;align-items:center;font-size:13px;color:#454a43;
+      background:#fff;border-radius:18px;padding:12px 14px;border:1px solid #e4e8e0;margin-top:18px;flex-wrap:wrap;
     }
-
-    .legend-item{
-      display:flex;
-      align-items:center;
-      gap:8px;
-    }
-
-    .legend-dot{
-      width:10px;
-      height:10px;
-      border-radius:50%;
-    }
-
-    .scrollhint{
-      text-align:center;
-      font-size:14px;
-      color:var(--muted);
-      padding:18px 0 6px;
-    }
-
+    .legend-item{display:flex;align-items:center;gap:8px}
+    .legend-dot{width:10px;height:10px;border-radius:50%}
+    .scrollhint{text-align:center;font-size:14px;color:var(--muted);padding:18px 0 6px}
     .detail-top{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      margin-top:8px;
-      position:sticky;
-      top:0;
-      z-index:20;
-      background:var(--bg);
-      padding-top:8px;
-      padding-bottom:14px;
+      display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px;
+      position:sticky;top:0;z-index:20;background:var(--bg);padding-top:8px;padding-bottom:14px;
     }
-
     .detail-card{
-      background:var(--panel);
-      border:1px solid var(--border);
-      border-radius:24px;
-      padding:22px 18px;
+      background:var(--panel);border:1px solid var(--border);border-radius:24px;padding:22px 18px;
       box-shadow:0 10px 24px rgba(0,0,0,.06);
     }
-
-    .detail-label{
-      color:var(--muted);
-      font-size:13px;
-      font-weight:800;
-      letter-spacing:.04em;
-      text-transform:uppercase;
-    }
-
-    .detail-title{
-      font-size:30px;
-      line-height:1.05;
-      font-weight:900;
-      margin-top:8px;
-      letter-spacing:-0.03em;
-    }
-
+    .detail-label{color:var(--muted);font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+    .detail-title{font-size:30px;line-height:1.05;font-weight:900;margin-top:8px;letter-spacing:-0.03em}
     .detail-big{
-      font-size:44px;
-      line-height:1;
-      font-weight:900;
-      margin-top:18px;
-      font-variant-numeric:tabular-nums;
-      letter-spacing:-0.04em;
+      font-size:44px;line-height:1;font-weight:900;margin-top:18px;
+      font-variant-numeric:tabular-nums;letter-spacing:-0.04em;
     }
-
-    .detail-grid{
-      display:grid;
-      gap:12px;
-      margin-top:18px;
-    }
-
+    .detail-grid{display:grid;gap:12px;margin-top:18px}
     .detail-row{
-      background:#f7f8f5;
-      border:1px solid #e7ebe3;
-      border-radius:16px;
-      padding:14px 14px;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
+      background:#f7f8f5;border:1px solid #e7ebe3;border-radius:16px;padding:14px 14px;
+      display:flex;justify-content:space-between;align-items:center;gap:12px;
     }
-
-    .detail-row .left{
-      color:var(--muted);
-      font-size:14px;
-      font-weight:700;
-    }
-
+    .detail-row .left{color:var(--muted);font-size:14px;font-weight:700}
     .detail-row .right{
-      color:var(--text);
-      font-size:20px;
-      font-weight:900;
-      font-variant-numeric:tabular-nums;
-      text-align:right;
+      color:var(--text);font-size:20px;font-weight:900;font-variant-numeric:tabular-nums;text-align:right;
     }
-
     .status-pill{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:10px 12px;
-      border-radius:999px;
-      font-size:14px;
-      font-weight:800;
-      margin-top:16px;
+      display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:999px;
+      font-size:14px;font-weight:800;margin-top:16px;
     }
-
     .status-pill.green{background:#e5f7e2;color:#1f7a26}
     .status-pill.red{background:#ffe1e3;color:#b21b22}
     .status-pill.yellow{background:#fff5c7;color:#9c7a00}
-
     .mini-chart-wrap{
-      margin-top:18px;
-      background:#f7f8f5;
-      border:1px solid #e7ebe3;
-      border-radius:18px;
-      padding:14px 12px 10px;
+      margin-top:18px;background:#f7f8f5;border:1px solid #e7ebe3;border-radius:18px;padding:14px 12px 10px;
     }
-
     .mini-chart-title{
-      font-size:13px;
-      font-weight:800;
-      color:var(--muted);
-      text-transform:uppercase;
-      letter-spacing:.04em;
-      margin-bottom:10px;
+      font-size:13px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px;
     }
-
-    .mini-chart{
-      width:100%;
-      height:110px;
-      display:block;
-    }
-
-    .mini-chart .grid{
-      stroke:#d7ddd2;
-      stroke-width:1;
-      stroke-dasharray:4 4;
-    }
-
+    .mini-chart{width:100%;height:110px;display:block}
+    .mini-chart .grid{stroke:#d7ddd2;stroke-width:1;stroke-dasharray:4 4}
     .mini-chart .line{
-      fill:none;
-      stroke:#1f2f22;
-      stroke-width:3;
-      stroke-linecap:round;
-      stroke-linejoin:round;
+      fill:none;stroke:#1f2f22;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;
     }
-
-    .mini-chart .fill{
-      fill:rgba(105, 212, 93, 0.14);
-    }
-
-    .mini-chart .dot{
-      fill:#1f2f22;
-      stroke:#fff;
-      stroke-width:3;
-    }
-
+    .mini-chart .fill{fill:rgba(105, 212, 93, 0.14)}
+    .mini-chart .dot{fill:#1f2f22;stroke:#fff;stroke-width:3}
     .mini-labels{
-      margin-top:8px;
-      display:flex;
-      justify-content:space-between;
-      gap:8px;
-      color:var(--muted);
-      font-size:11px;
-      font-weight:800;
+      margin-top:8px;display:flex;justify-content:space-between;gap:8px;color:var(--muted);
+      font-size:11px;font-weight:800;
     }
-
     .mini-labels span{
-      min-width:0;
-      flex:1;
-      text-align:center;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
+      min-width:0;flex:1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
     }
-
-    .detail-note{
-      margin-top:16px;
-      color:var(--muted);
-      font-size:14px;
-      line-height:1.45;
-    }
-
+    .detail-note{margin-top:16px;color:var(--muted);font-size:14px;line-height:1.45}
     @media (max-width:390px){
-      .card-grid{
-        grid-template-columns:58px 1fr 96px;
-        gap:10px;
-      }
-
+      .card-grid{grid-template-columns:58px 1fr 96px;gap:10px}
       h1{font-size:24px}
       .sub{font-size:15px;max-width:200px}
       .value{font-size:24px}
@@ -475,22 +183,10 @@
         <div id="detailStatusPill" class="status-pill yellow">Samme nivå</div>
 
         <div class="detail-grid">
-          <div class="detail-row">
-            <div class="left">I går</div>
-            <div class="right" id="detailPrev">—</div>
-          </div>
-          <div class="detail-row">
-            <div class="left">Dagen før</div>
-            <div class="right" id="detailPrev2">—</div>
-          </div>
-          <div class="detail-row">
-            <div class="left">1 dags endring</div>
-            <div class="right" id="detailChange">—</div>
-          </div>
-          <div class="detail-row">
-            <div class="left">Kort status</div>
-            <div class="right" id="detailStatusText">—</div>
-          </div>
+          <div class="detail-row"><div class="left">I går</div><div class="right" id="detailPrev">—</div></div>
+          <div class="detail-row"><div class="left">Dagen før</div><div class="right" id="detailPrev2">—</div></div>
+          <div class="detail-row"><div class="left">1 dags endring</div><div class="right" id="detailChange">—</div></div>
+          <div class="detail-row"><div class="left">Kort status</div><div class="right" id="detailStatusText">—</div></div>
         </div>
 
         <div class="mini-chart-wrap">
@@ -507,7 +203,7 @@
         </div>
 
         <div class="detail-note">
-          Grafen viser nå ekte 5-dagers Yahoo-data med ugedage som etiketter.
+          Grafen viser ekte 5-dagers data med ugedager som etiketter.
         </div>
       </section>
     </section>
@@ -543,7 +239,7 @@
         market: 'OSLO BØRS',
         icon: '🇳🇴',
         endpoint: `${WORKER_BASE}/yahoo?symbol=OSEBX.OL`,
-        chartEndpoint: 'https://query1.finance.yahoo.com/v8/finance/chart/OSEBX.OL?range=5d&interval=1d&includePrePost=false',
+        chartEndpoint: `${WORKER_BASE}/yahoo-chart?symbol=OSEBX.OL&range=5d&interval=1d`,
         reverse: false,
         type: 'number',
         decimals: 2,
@@ -653,8 +349,7 @@
         data?.price,
         data?.regularMarketPrice,
         data?.currentPrice,
-        data?.close,
-        data?.quoteResponse?.result?.[0]?.regularMarketPrice
+        data?.close
       ];
       for (const candidate of candidates) {
         const num = Number(candidate);
@@ -667,8 +362,7 @@
       const candidates = [
         data?.previousClose,
         data?.chartPreviousClose,
-        data?.meta?.previousClose,
-        data?.quoteResponse?.result?.[0]?.regularMarketPreviousClose
+        data?.meta?.previousClose
       ];
       for (const candidate of candidates) {
         const num = Number(candidate);
@@ -681,14 +375,12 @@
       const valueCandidates = [
         data?.change,
         data?.regularMarketChange,
-        data?.priceChange,
-        data?.quoteResponse?.result?.[0]?.regularMarketChange
+        data?.priceChange
       ];
       const pctCandidates = [
         data?.changePercent,
         data?.regularMarketChangePercent,
-        data?.percentChange,
-        data?.quoteResponse?.result?.[0]?.regularMarketChangePercent
+        data?.percentChange
       ];
 
       let change = null;
@@ -749,9 +441,7 @@
 
     function normalizeRawValue(rawValue, config) {
       if (!Number.isFinite(rawValue)) return null;
-      if (config.type === 'tnx_percent') {
-        return rawValue > 20 ? rawValue / 10 : rawValue;
-      }
+      if (config.type === 'tnx_percent') return rawValue > 20 ? rawValue / 10 : rawValue;
       return rawValue;
     }
 
@@ -767,20 +457,13 @@
     }
 
     function buildChangeText(change, decimals = 2) {
-      const hasChange = Number.isFinite(change);
-      if (!hasChange) return '—';
-
+      if (!Number.isFinite(change)) return '—';
       const sign = change > 0 ? '+' : '';
       return `${sign}${formatNumberNo(change, decimals)}`;
     }
 
     function getNorwegianWeekday(ts) {
-      return new Date(ts * 1000).toLocaleDateString('nb-NO', { weekday: 'short' });
-    }
-
-    function normalizeWeekdayLabel(label) {
-      if (!label) return '';
-      return label.replace('.', '');
+      return new Date(ts * 1000).toLocaleDateString('nb-NO', { weekday: 'short' }).replace('.', '');
     }
 
     async function fetchFiveDaySeries(url) {
@@ -788,25 +471,25 @@
       if (!response.ok) throw new Error(`Chart HTTP ${response.status}`);
 
       const data = await response.json();
-      const result = data?.chart?.result?.[0];
-      const timestamps = result?.timestamp || [];
-      const closes = result?.indicators?.quote?.[0]?.close || [];
+      const points = Array.isArray(data?.points) ? data.points : [];
 
-      const points = timestamps.map((ts, index) => ({
-        ts,
-        close: Number(closes[index])
-      })).filter(point => Number.isFinite(point.ts) && Number.isFinite(point.close));
+      return points
+        .map(p => ({ ts: Number(p.ts), close: Number(p.close) }))
+        .filter(p => Number.isFinite(p.ts) && Number.isFinite(p.close))
+        .slice(-5);
+    }
 
-      return points.slice(-5);
+    function resetChart(message = '') {
+      chartLine.setAttribute('d', '');
+      chartFill.setAttribute('d', '');
+      chartDot.setAttribute('cx', 0);
+      chartDot.setAttribute('cy', 0);
+      chartLabels.innerHTML = message ? `<span style="flex:1;text-align:center">${message}</span>` : '';
     }
 
     function drawMiniChart(points) {
       if (!points || points.length < 2) {
-        chartLine.setAttribute('d', '');
-        chartFill.setAttribute('d', '');
-        chartDot.setAttribute('cx', 0);
-        chartDot.setAttribute('cy', 0);
-        chartLabels.innerHTML = '';
+        resetChart('Ingen grafdata');
         return;
       }
 
@@ -819,7 +502,7 @@
 
       const min = Math.min(...series);
       const max = Math.max(...series);
-      const range = Math.max(max - min, 1e-9);
+      const range = Math.max(max - min, 0.0001);
 
       const coords = series.map((value, i) => {
         const x = left + (i * (right - left) / Math.max(series.length - 1, 1));
@@ -835,10 +518,7 @@
       chartDot.setAttribute('cx', coords[coords.length - 1][0].toFixed(1));
       chartDot.setAttribute('cy', coords[coords.length - 1][1].toFixed(1));
 
-      chartLabels.innerHTML = points.map(point => {
-        const label = normalizeWeekdayLabel(getNorwegianWeekday(point.ts));
-        return `<span>${label}</span>`;
-      }).join('');
+      chartLabels.innerHTML = points.map(point => `<span>${getNorwegianWeekday(point.ts)}</span>`).join('');
     }
 
     async function fetchMarket(config) {
@@ -880,10 +560,7 @@
         valueText: buildDisplayValue(rawValue, config),
         previousText: buildDisplayValue(rawPreviousClose, config),
         previous2Text: Number.isFinite(previous2) ? formatNumberNo(previous2, config.decimals) : '—',
-        changeText: buildChangeText(
-          normalized.change,
-          config.decimals === 4 ? 4 : 2
-        ),
+        changeText: buildChangeText(normalized.change, config.decimals === 4 ? 4 : 2),
         signalValue: normalized.changePct ?? normalized.change ?? 0,
         shortStatus: buildShortStatus(normalized.change, normalized.changePct)
       };
@@ -907,9 +584,7 @@
                     <div class="meta-line"><span class="label">1 dags endring</span>${item.changeText}</div>
                   </div>
                 </div>
-                <div class="trend">
-                  <div class="status-mark" aria-hidden="true"></div>
-                </div>
+                <div class="trend"><div class="status-mark" aria-hidden="true"></div></div>
               </div>
             </article>
           </button>
@@ -920,12 +595,8 @@
     function showScreen(name) {
       homeScreen.classList.remove('active');
       detailScreen.classList.remove('active');
-
-      if (name === 'detail') {
-        detailScreen.classList.add('active');
-      } else {
-        homeScreen.classList.add('active');
-      }
+      if (name === 'detail') detailScreen.classList.add('active');
+      else homeScreen.classList.add('active');
     }
 
     async function openDetail(key) {
@@ -944,22 +615,17 @@
       detailStatusPill.className = `status-pill ${state.colorClass}`;
       detailStatusPill.textContent = state.text;
 
-      chartLabels.innerHTML = '<span>Laster…</span>';
+      resetChart('Laster graf…');
+      showScreen('detail');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
 
       try {
         const points = await fetchFiveDaySeries(item.chartEndpoint);
         drawMiniChart(points);
       } catch (error) {
         console.error(error);
-        chartLabels.innerHTML = '<span>Ingen grafdata</span>';
-        chartLine.setAttribute('d', '');
-        chartFill.setAttribute('d', '');
-        chartDot.setAttribute('cx', 0);
-        chartDot.setAttribute('cy', 0);
+        resetChart('Ingen grafdata');
       }
-
-      showScreen('detail');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function goBack() {
@@ -986,7 +652,6 @@
     backBtn.addEventListener('click', goBack);
     refreshBtn.addEventListener('click', loadMarkets);
     loadMarkets();
-
     window.openDetail = openDetail;
   </script>
 </body>

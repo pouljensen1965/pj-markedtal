@@ -1,23 +1,3 @@
-Ja — du har helt ret. For VIX og US10Y skal farven godt nok være omvendt, men teksten i højre hjørne skal også følge den omvendte logik. Når de falder, skal de derfor ikke stå som OPP; de skal stå som noget i retning af BEDRE eller NED, alt efter hvad du vil kalde det.
-
-Hvad der er galt nu
-På billedet er VIX og US10Y grønne, fordi fald er positivt for dem, og det er korrekt. Men badge-teksten i højre hjørne siger stadig OPP, og det er misvisende, fordi selve bevægelsen jo går ned.
-
-Den rigtige løsning
-Den bedste løsning er at lade badge-teksten beskrive retningen i tallet, ikke om det er godt eller dårligt. Så bliver det:
-
-NED når tallet falder
-
-OPP når tallet stiger
-
-SAMME NIVÅ når det er uændret[ file:366]
-
-Farven kan stadig være omvendt for VIX, US10Y og USD/NOK.
-
-Hele den rigtige kode
-Her får du hele HTML-koden igen, hvor jeg har rettet det, så badge-teksten følger den faktiske retning, mens farven stadig kan være omvendt for VIX, US10Y og USD/NOK.
-
-xml
 <!DOCTYPE html>
 <html lang="no">
 <head>
@@ -121,7 +101,7 @@ xml
 
     .card-grid{
       display:grid;
-      grid-template-columns:64px 1fr 132px;
+      grid-template-columns:64px 1fr 116px;
       gap:12px;
       align-items:center;
     }
@@ -181,52 +161,39 @@ xml
 
     .trend{
       display:flex;
-      flex-direction:column;
-      align-items:stretch;
-      gap:10px;
+      justify-content:center;
+      align-items:center;
+      min-height:52px;
     }
 
-    .badge{
-      align-self:end;
-      padding:7px 12px;
-      border-radius:11px;
-      font-size:13px;
-      font-weight:900;
-      background:rgba(0,0,0,.18);
-      color:#fff;
-      text-transform:uppercase;
-      white-space:nowrap;
-    }
-
-    .sparkline{
-      height:52px;
-      position:relative;
-    }
-
-    .sparkline svg{
+    .status-mark{
       width:100%;
-      height:100%;
-      display:block;
+      max-width:96px;
+      position:relative;
+      height:28px;
     }
 
-    .sparkline .base{
-      stroke:rgba(255,255,255,.45);
-      stroke-dasharray:5 5;
-      stroke-width:1.8;
+    .status-mark::before{
+      content:"";
+      position:absolute;
+      left:0;
+      right:0;
+      top:50%;
+      transform:translateY(-50%);
+      border-top:2px dashed rgba(255,255,255,.52);
     }
 
-    .sparkline .line{
-      fill:none;
-      stroke:#fff;
-      stroke-width:3;
-      stroke-linecap:round;
-      stroke-linejoin:round;
-    }
-
-    .sparkline .end{
-      fill:#fff;
-      stroke:rgba(255,255,255,.2);
-      stroke-width:3;
+    .status-mark::after{
+      content:"";
+      position:absolute;
+      right:0;
+      top:50%;
+      width:8px;
+      height:8px;
+      border-radius:50%;
+      transform:translateY(-50%);
+      background:#fff;
+      box-shadow:0 0 0 3px rgba(255,255,255,.16);
     }
 
     .legend{
@@ -265,15 +232,15 @@ xml
 
     @media (max-width:390px){
       .card-grid{
-        grid-template-columns:58px 1fr 118px;
+        grid-template-columns:58px 1fr 96px;
         gap:10px;
       }
 
       h1{font-size:24px}
       .sub{font-size:15px;max-width:200px}
       .value{font-size:24px}
-      .badge{font-size:12px;padding:6px 10px}
       .meta-line{font-size:11px}
+      .status-mark{max-width:82px}
     }
   </style>
 </head>
@@ -290,9 +257,9 @@ xml
     <section class="cards" id="cards"></section>
 
     <section class="legend">
-      <div class="legend-item"><span class="legend-dot" style="background:#35b74a"></span>Green = up</div>
-      <div class="legend-item"><span class="legend-dot" style="background:#df1317"></span>Red = down</div>
-      <div class="legend-item"><span class="legend-dot" style="background:#d7ad00"></span>Yellow = same level</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#35b74a"></span>Green = positiv utvikling</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#df1317"></span>Red = negativ utvikling</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#d7ad00"></span>Yellow = samme nivå</div>
     </section>
 
     <div class="scrollhint">Bla opp og ned med tommelen for å se alle feltene.</div>
@@ -312,8 +279,7 @@ xml
         endpoint: `${WORKER_BASE}/yahoo?symbol=%5EVIX`,
         reverse: true,
         type: 'number',
-        decimals: 1,
-        spark: 'M2 30 L10 27 L18 26 L26 24 L34 22 L42 24 L50 21 L58 18 L66 20 L74 17 L82 18 L90 16 L98 17 L106 15'
+        decimals: 1
       },
       {
         key: 'us10y',
@@ -322,8 +288,7 @@ xml
         endpoint: `${WORKER_BASE}/yahoo?symbol=%5ETNX`,
         reverse: true,
         type: 'tnx_percent',
-        decimals: 2,
-        spark: 'M2 14 L10 15 L18 16 L26 16 L34 17 L42 18 L50 19 L58 20 L66 21 L74 22 L82 23 L90 24 L98 25 L106 26'
+        decimals: 2
       },
       {
         key: 'sp500',
@@ -332,8 +297,7 @@ xml
         endpoint: `${WORKER_BASE}/yahoo?symbol=%5EGSPC`,
         reverse: false,
         type: 'number',
-        decimals: 0,
-        spark: 'M2 28 L10 26 L18 25 L26 23 L34 21 L42 20 L50 18 L58 16 L66 17 L74 14 L82 13 L90 11 L98 12 L106 10'
+        decimals: 0
       },
       {
         key: 'oil',
@@ -342,8 +306,7 @@ xml
         endpoint: `${WORKER_BASE}/yahoo?symbol=CL%3DF`,
         reverse: false,
         type: 'number',
-        decimals: 2,
-        spark: 'M2 26 L10 24 L18 22 L26 21 L34 19 L42 20 L50 18 L58 17 L66 18 L74 16 L82 17 L90 15 L98 16 L106 14'
+        decimals: 2
       },
       {
         key: 'gold',
@@ -352,8 +315,7 @@ xml
         endpoint: `${WORKER_BASE}/yahoo?symbol=GC%3DF`,
         reverse: false,
         type: 'number',
-        decimals: 0,
-        spark: 'M2 24 L10 24 L18 23 L26 22 L34 22 L42 21 L50 20 L58 20 L66 19 L74 19 L82 18 L90 18 L98 17 L106 17'
+        decimals: 0
       },
       {
         key: 'silver',
@@ -362,8 +324,7 @@ xml
         endpoint: `${WORKER_BASE}/yahoo?symbol=SI%3DF`,
         reverse: false,
         type: 'number',
-        decimals: 2,
-        spark: 'M2 29 L10 27 L18 26 L26 24 L34 22 L42 21 L50 19 L58 18 L66 17 L74 15 L82 14 L90 13 L98 12 L106 10'
+        decimals: 2
       },
       {
         key: 'bitcoin',
@@ -372,8 +333,7 @@ xml
         endpoint: `${WORKER_BASE}/yahoo?symbol=BTC-USD`,
         reverse: false,
         type: 'number',
-        decimals: 0,
-        spark: 'M2 30 L10 26 L18 22 L26 24 L34 20 L42 18 L50 16 L58 18 L66 14 L74 12 L82 13 L90 11 L98 12 L106 9'
+        decimals: 0
       },
       {
         key: 'usdnok',
@@ -382,8 +342,7 @@ xml
         endpoint: `${WORKER_BASE}/yahoo?symbol=USDNOK%3DX`,
         reverse: true,
         type: 'number',
-        decimals: 4,
-        spark: 'M2 18 L10 19 L18 19 L26 20 L34 20 L42 21 L50 21 L58 22 L66 22 L74 23 L82 23 L90 24 L98 24 L106 25'
+        decimals: 4
       }
     ];
 
@@ -457,20 +416,14 @@ xml
       const num = Number(signalValue);
 
       if (!Number.isFinite(num) || Math.abs(num) < 0.0001) {
-        return { colorClass: 'yellow', badge: 'SAMME NIVÅ' };
+        return { colorClass: 'yellow' };
       }
-
-      const directionBadge = num > 0 ? 'OPP' : 'NED';
 
       if (reverse) {
-        return num > 0
-          ? { colorClass: 'red', badge: directionBadge }
-          : { colorClass: 'green', badge: directionBadge };
+        return num > 0 ? { colorClass: 'red' } : { colorClass: 'green' };
       }
 
-      return num > 0
-        ? { colorClass: 'green', badge: directionBadge }
-        : { colorClass: 'red', badge: directionBadge };
+      return num > 0 ? { colorClass: 'green' } : { colorClass: 'red' };
     }
 
     function buildDisplayValue(rawValue, config) {
@@ -501,7 +454,7 @@ xml
       return { change, changePct };
     }
 
-    function buildChangeText(change, changePct, decimals = 2) {
+    function buildChangeText(change, decimals = 2) {
       const hasChange = Number.isFinite(change);
       if (!hasChange) return '—';
 
@@ -541,7 +494,6 @@ xml
         previousText: buildDisplayValue(rawPreviousClose, config),
         changeText: buildChangeText(
           normalized.change,
-          normalized.changePct,
           config.decimals === 4 ? 4 : 2
         ),
         signalValue: normalized.changePct ?? normalized.change ?? 0
@@ -565,14 +517,7 @@ xml
                 </div>
               </div>
               <div class="trend">
-                <div class="badge">${state.badge}</div>
-                <div class="sparkline">
-                  <svg viewBox="0 0 110 42" preserveAspectRatio="none">
-                    <path class="base" d="M0 34 H110"></path>
-                    <path class="line" d="${item.spark}"></path>
-                    <circle class="end" cx="106" cy="20" r="2.8"></circle>
-                  </svg>
-                </div>
+                <div class="status-mark" aria-hidden="true"></div>
               </div>
             </div>
           </article>

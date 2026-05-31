@@ -1,3 +1,6 @@
+Ja — her får du hele den samlede kode igen, så du bare kan erstatte det hele. I denne version er “I dag” fjernet, så det store tal er dagens pris, og under det står kun “I går” og “1 dags endring”.
+
+xml
 <!DOCTYPE html>
 <html lang="no">
 <head>
@@ -10,11 +13,9 @@
       --bg:#efefe9;
       --text:#202320;
       --muted:#6f786c;
-      --muted-2:#879082;
       --green:#69d45d;
       --red:#ff1f26;
       --yellow:#f2cb27;
-      --white:#ffffff;
       --shadow:0 10px 30px rgba(0,0,0,.08);
     }
 
@@ -162,13 +163,6 @@
       margin-right:6px;
     }
 
-    .period{
-      font-size:11px;
-      line-height:1.15;
-      opacity:.9;
-      margin-top:2px;
-    }
-
     .trend{
       display:flex;
       flex-direction:column;
@@ -264,7 +258,6 @@
       .value{font-size:24px}
       .badge{font-size:12px;padding:6px 10px}
       .meta-line{font-size:11px}
-      .period{font-size:10px}
     }
   </style>
 </head>
@@ -531,14 +524,12 @@
       return {
         ...config,
         valueText: buildDisplayValue(rawValue, config),
-        todayText: buildDisplayValue(rawValue, config),
         previousText: buildDisplayValue(rawPreviousClose, config),
         changeText: buildChangeText(
           normalized.change,
           normalized.changePct,
           config.decimals === 4 ? 4 : 2
         ),
-        period: '1 dags endring',
         signalValue: normalized.changePct ?? normalized.change ?? 0
       };
     }
@@ -555,11 +546,9 @@
                 <div class="market">${item.market}</div>
                 <div class="value">${item.valueText}</div>
                 <div class="meta-stack">
-                  <div class="meta-line"><span class="label">I dag</span>${item.todayText}</div>
                   <div class="meta-line"><span class="label">I går</span>${item.previousText}</div>
-                  <div class="meta-line"><span class="label">Endring</span>${item.changeText}</div>
+                  <div class="meta-line"><span class="label">1 dags endring</span>${item.changeText}</div>
                 </div>
-                <div class="period">${item.period}</div>
               </div>
               <div class="trend">
                 <div class="badge">${state.badge}</div>

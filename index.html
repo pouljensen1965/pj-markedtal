@@ -95,13 +95,8 @@
       cursor:default;
     }
 
-    .screen{
-      display:none;
-    }
-
-    .screen.active{
-      display:block;
-    }
+    .screen{display:none}
+    .screen.active{display:block}
 
     .cards{
       display:grid;
@@ -409,7 +404,16 @@
       gap:8px;
       color:var(--muted);
       font-size:11px;
-      font-weight:700;
+      font-weight:800;
+    }
+
+    .mini-labels span{
+      min-width:0;
+      flex:1;
+      text-align:center;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
 
     .detail-note{
@@ -432,6 +436,7 @@
       .status-mark{max-width:82px}
       .detail-title{font-size:26px}
       .detail-big{font-size:38px}
+      .mini-labels{font-size:10px}
     }
   </style>
 </head>
@@ -489,7 +494,7 @@
         </div>
 
         <div class="mini-chart-wrap">
-          <div class="mini-chart-title">Siste 5 dager</div>
+          <div class="mini-chart-title">Siste 5 handelsdager</div>
           <svg id="detailChart" class="mini-chart" viewBox="0 0 320 110" preserveAspectRatio="none" aria-hidden="true">
             <path class="grid" d="M0 88 H320"></path>
             <path class="grid" d="M0 55 H320"></path>
@@ -498,17 +503,11 @@
             <path id="chartLine" class="line" d=""></path>
             <circle id="chartDot" class="dot" cx="0" cy="0" r="4"></circle>
           </svg>
-          <div class="mini-labels" id="chartLabels">
-            <span>Dag 1</span>
-            <span>Dag 2</span>
-            <span>Dag 3</span>
-            <span>Dag 4</span>
-            <span>I dag</span>
-          </div>
+          <div class="mini-labels" id="chartLabels"></div>
         </div>
 
         <div class="detail-note">
-          Oslo-siden viser nu i dag, i går, dagen før, en kort status og en enkel 5 dages udvikling.
+          Grafen viser nå ekte 5-dagers Yahoo-data med ugedage som etiketter.
         </div>
       </section>
     </section>
@@ -534,6 +533,7 @@
     const chartLine = document.getElementById('chartLine');
     const chartFill = document.getElementById('chartFill');
     const chartDot = document.getElementById('chartDot');
+    const chartLabels = document.getElementById('chartLabels');
 
     let latestResults = [];
 
@@ -543,6 +543,7 @@
         market: 'OSLO BØRS',
         icon: '🇳🇴',
         endpoint: `${WORKER_BASE}/yahoo?symbol=OSEBX.OL`,
+        chartEndpoint: 'https://query1.finance.yahoo.com/v8/finance/chart/OSEBX.OL?range=5d&interval=1d&includePrePost=false',
         reverse: false,
         type: 'number',
         decimals: 2,
@@ -773,28 +774,44 @@
       return `${sign}${formatNumberNo(change, decimals)}`;
     }
 
-    function buildFiveDaySeries(currentValue, previousClose, change) {
-      if (!Number.isFinite(currentValue)) return [];
-
-      const prev1 = Number.isFinite(previousClose) ? previousClose : currentValue - (Number.isFinite(change) ? change : 0);
-      const prev2 = Number.isFinite(change) ? prev1 - change * 0.55 : prev1 * 0.997;
-      const prev3 = Number.isFinite(change) ? prev2 - change * 0.35 : prev2 * 1.002;
-      const prev4 = Number.isFinite(change) ? prev3 - change * 0.25 : prev3 * 0.998;
-
-      return [prev4, prev3, prev2, prev1, currentValue].map(v => Number(v));
+    function getNorwegianWeekday(ts) {
+      return new Date(ts * 1000).toLocaleDateString('nb-NO', { weekday: 'short' });
     }
 
-    function drawMiniChart(series) {
-      if (!series || series.length < 2 || series.some(v => !Number.isFinite(v))) {
+    function normalizeWeekdayLabel(label) {
+      if (!label) return '';
+      return label.replace('.', '');
+    }
+
+    async function fetchFiveDaySeries(url) {
+      const response = await fetch(url, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`Chart HTTP ${response.status}`);
+
+      const data = await response.json();
+      const result = data?.chart?.result?.[0];
+      const timestamps = result?.timestamp || [];
+      const closes = result?.indicators?.quote?.[0]?.close || [];
+
+      const points = timestamps.map((ts, index) => ({
+        ts,
+        close: Number(closes[index])
+      })).filter(point => Number.isFinite(point.ts) && Number.isFinite(point.close));
+
+      return points.slice(-5);
+    }
+
+    function drawMiniChart(points) {
+      if (!points || points.length < 2) {
         chartLine.setAttribute('d', '');
         chartFill.setAttribute('d', '');
         chartDot.setAttribute('cx', 0);
         chartDot.setAttribute('cy', 0);
+        chartLabels.innerHTML = '';
         return;
       }
 
+      const series = points.map(p => p.close);
       const width = 320;
-      const height = 110;
       const left = 6;
       const right = 314;
       const top = 12;
@@ -804,19 +821,24 @@
       const max = Math.max(...series);
       const range = Math.max(max - min, 1e-9);
 
-      const points = series.map((value, i) => {
-        const x = left + (i * (right - left) / (series.length - 1));
+      const coords = series.map((value, i) => {
+        const x = left + (i * (right - left) / Math.max(series.length - 1, 1));
         const y = bottom - ((value - min) / range) * (bottom - top);
         return [x, y];
       });
 
-      const lineD = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(' ');
-      const fillD = `${lineD} L${points[points.length - 1][0].toFixed(1)} ${bottom} L${points[0][0].toFixed(1)} ${bottom} Z`;
+      const lineD = coords.map((p, i) => `${i === 0 ? 'M' : 'L'}${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(' ');
+      const fillD = `${lineD} L${coords[coords.length - 1][0].toFixed(1)} ${bottom} L${coords[0][0].toFixed(1)} ${bottom} Z`;
 
       chartLine.setAttribute('d', lineD);
       chartFill.setAttribute('d', fillD);
-      chartDot.setAttribute('cx', points[points.length - 1][0].toFixed(1));
-      chartDot.setAttribute('cy', points[points.length - 1][1].toFixed(1));
+      chartDot.setAttribute('cx', coords[coords.length - 1][0].toFixed(1));
+      chartDot.setAttribute('cy', coords[coords.length - 1][1].toFixed(1));
+
+      chartLabels.innerHTML = points.map(point => {
+        const label = normalizeWeekdayLabel(getNorwegianWeekday(point.ts));
+        return `<span>${label}</span>`;
+      }).join('');
     }
 
     async function fetchMarket(config) {
@@ -906,12 +928,11 @@
       }
     }
 
-    function openDetail(key) {
+    async function openDetail(key) {
       const item = latestResults.find(x => x.key === key);
       if (!item) return;
 
       const state = getState(item.signalValue, item.reverse);
-      const series = buildFiveDaySeries(item.rawValue, item.rawPrevious, item.normalizedChange);
 
       detailTitle.textContent = item.market;
       detailValue.textContent = item.valueText;
@@ -923,7 +944,19 @@
       detailStatusPill.className = `status-pill ${state.colorClass}`;
       detailStatusPill.textContent = state.text;
 
-      drawMiniChart(series);
+      chartLabels.innerHTML = '<span>Laster…</span>';
+
+      try {
+        const points = await fetchFiveDaySeries(item.chartEndpoint);
+        drawMiniChart(points);
+      } catch (error) {
+        console.error(error);
+        chartLabels.innerHTML = '<span>Ingen grafdata</span>';
+        chartLine.setAttribute('d', '');
+        chartFill.setAttribute('d', '');
+        chartDot.setAttribute('cx', 0);
+        chartDot.setAttribute('cy', 0);
+      }
 
       showScreen('detail');
       window.scrollTo({ top: 0, behavior: 'smooth' });

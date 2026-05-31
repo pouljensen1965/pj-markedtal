@@ -1,3 +1,6 @@
+Ja — her er hele koden, så du bare kan erstatte alt i . Denne version lægger Oslo Børs ind som eget kort og åbner en enkel detaljevisning, når du trykker på det kort.index.html
+
+xml
 <!DOCTYPE html>
 <html lang="no">
 <head>
@@ -13,6 +16,8 @@
       --green:#69d45d;
       --red:#ff1f26;
       --yellow:#f2cb27;
+      --panel:#ffffff;
+      --border:#e4e8e0;
     }
 
     *{box-sizing:border-box}
@@ -40,14 +45,15 @@
       margin-top:8px;
       position:sticky;
       top:0;
-      z-index:10;
+      z-index:20;
       background:var(--bg);
       padding-top:8px;
       padding-bottom:14px;
     }
 
+    h1,h2,h3,p{margin:0}
+
     h1{
-      margin:0;
       font-size:28px;
       line-height:1.05;
       font-weight:900;
@@ -62,7 +68,8 @@
       max-width:220px;
     }
 
-    .update-btn{
+    .update-btn,
+    .back-btn{
       border:0;
       background:#28b24a;
       color:#fff;
@@ -81,9 +88,22 @@
       flex:none;
     }
 
+    .back-btn{
+      min-width:auto;
+      background:#1d8e3b;
+    }
+
     .update-btn:disabled{
       opacity:.75;
       cursor:default;
+    }
+
+    .screen{
+      display:none;
+    }
+
+    .screen.active{
+      display:block;
     }
 
     .cards{
@@ -245,6 +265,90 @@
       padding:18px 0 6px;
     }
 
+    .detail-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-top:8px;
+      position:sticky;
+      top:0;
+      z-index:20;
+      background:var(--bg);
+      padding-top:8px;
+      padding-bottom:14px;
+    }
+
+    .detail-card{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:24px;
+      padding:22px 18px;
+      box-shadow:0 10px 24px rgba(0,0,0,.06);
+    }
+
+    .detail-label{
+      color:var(--muted);
+      font-size:13px;
+      font-weight:800;
+      letter-spacing:.04em;
+      text-transform:uppercase;
+    }
+
+    .detail-title{
+      font-size:30px;
+      line-height:1.05;
+      font-weight:900;
+      margin-top:8px;
+      letter-spacing:-0.03em;
+    }
+
+    .detail-big{
+      font-size:44px;
+      line-height:1;
+      font-weight:900;
+      margin-top:18px;
+      font-variant-numeric:tabular-nums;
+      letter-spacing:-0.04em;
+    }
+
+    .detail-grid{
+      display:grid;
+      gap:12px;
+      margin-top:18px;
+    }
+
+    .detail-row{
+      background:#f7f8f5;
+      border:1px solid #e7ebe3;
+      border-radius:16px;
+      padding:14px 14px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+    }
+
+    .detail-row .left{
+      color:var(--muted);
+      font-size:14px;
+      font-weight:700;
+    }
+
+    .detail-row .right{
+      color:var(--text);
+      font-size:20px;
+      font-weight:900;
+      font-variant-numeric:tabular-nums;
+    }
+
+    .detail-note{
+      margin-top:16px;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.45;
+    }
+
     @media (max-width:390px){
       .card-grid{
         grid-template-columns:58px 1fr 96px;
@@ -256,28 +360,63 @@
       .value{font-size:24px}
       .meta-line{font-size:11px}
       .status-mark{max-width:82px}
+      .detail-title{font-size:26px}
+      .detail-big{font-size:38px}
     }
   </style>
 </head>
 <body>
   <main class="app">
-    <section class="hero">
-      <div>
-        <h1>Markets Overview</h1>
-        <div class="sub">Live markedsdata · trykk på et kort for detaljer.</div>
-      </div>
-      <button class="update-btn" id="refreshBtn"><span>⟳</span><span>Oppdater</span></button>
+    <section id="homeScreen" class="screen active">
+      <section class="hero">
+        <div>
+          <h1>Markets Overview</h1>
+          <div class="sub">Live markedsdata · trykk på et kort for detaljer.</div>
+        </div>
+        <button class="update-btn" id="refreshBtn"><span>⟳</span><span>Oppdater</span></button>
+      </section>
+
+      <section class="cards" id="cards"></section>
+
+      <section class="legend">
+        <div class="legend-item"><span class="legend-dot" style="background:#35b74a"></span>Green = positiv utvikling</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#df1317"></span>Red = negativ utvikling</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#d7ad00"></span>Yellow = samme nivå</div>
+      </section>
+
+      <div class="scrollhint">Bla opp og ned med tommelen for å se alle feltene.</div>
     </section>
 
-    <section class="cards" id="cards"></section>
+    <section id="detailScreen" class="screen">
+      <section class="detail-top">
+        <button class="back-btn" id="backBtn"><span>←</span><span>Tilbake</span></button>
+      </section>
 
-    <section class="legend">
-      <div class="legend-item"><span class="legend-dot" style="background:#35b74a"></span>Green = positiv utvikling</div>
-      <div class="legend-item"><span class="legend-dot" style="background:#df1317"></span>Red = negativ utvikling</div>
-      <div class="legend-item"><span class="legend-dot" style="background:#d7ad00"></span>Yellow = samme nivå</div>
+      <section class="detail-card">
+        <div class="detail-label">INDEKS · NORGE</div>
+        <div class="detail-title" id="detailTitle">Oslo Børs</div>
+        <div class="detail-big" id="detailValue">—</div>
+
+        <div class="detail-grid">
+          <div class="detail-row">
+            <div class="left">I går</div>
+            <div class="right" id="detailPrev">—</div>
+          </div>
+          <div class="detail-row">
+            <div class="left">1 dags endring</div>
+            <div class="right" id="detailChange">—</div>
+          </div>
+          <div class="detail-row">
+            <div class="left">Status</div>
+            <div class="right" id="detailStatus">—</div>
+          </div>
+        </div>
+
+        <div class="detail-note">
+          Dette er en enkel detaljevisning for Oslo Børs. Den kan senere udvides med mini-graf, flere perioder og flere norske markeder.
+        </div>
+      </section>
     </section>
-
-    <div class="scrollhint">Bla opp og ned med tommelen for å se alle feltene.</div>
   </main>
 
   <script>
@@ -285,6 +424,17 @@
 
     const refreshBtn = document.getElementById('refreshBtn');
     const cardsEl = document.getElementById('cards');
+    const homeScreen = document.getElementById('homeScreen');
+    const detailScreen = document.getElementById('detailScreen');
+    const backBtn = document.getElementById('backBtn');
+
+    const detailTitle = document.getElementById('detailTitle');
+    const detailValue = document.getElementById('detailValue');
+    const detailPrev = document.getElementById('detailPrev');
+    const detailChange = document.getElementById('detailChange');
+    const detailStatus = document.getElementById('detailStatus');
+
+    let latestResults = [];
 
     const marketConfig = [
       {
@@ -295,7 +445,8 @@
         reverse: false,
         type: 'number',
         decimals: 2,
-        url: '#oslobors'
+        country: 'Norge',
+        detail: true
       },
       {
         key: 'vix',
@@ -305,7 +456,8 @@
         reverse: true,
         type: 'number',
         decimals: 1,
-        url: '#vix'
+        country: 'USA',
+        detail: false
       },
       {
         key: 'us10y',
@@ -315,7 +467,8 @@
         reverse: true,
         type: 'tnx_percent',
         decimals: 2,
-        url: '#us10y'
+        country: 'USA',
+        detail: false
       },
       {
         key: 'sp500',
@@ -325,7 +478,8 @@
         reverse: false,
         type: 'number',
         decimals: 0,
-        url: '#sp500'
+        country: 'USA',
+        detail: false
       },
       {
         key: 'oil',
@@ -335,7 +489,8 @@
         reverse: false,
         type: 'number',
         decimals: 2,
-        url: '#oil'
+        country: 'Råvarer',
+        detail: false
       },
       {
         key: 'gold',
@@ -345,7 +500,8 @@
         reverse: false,
         type: 'number',
         decimals: 0,
-        url: '#gold'
+        country: 'Råvarer',
+        detail: false
       },
       {
         key: 'silver',
@@ -355,7 +511,8 @@
         reverse: false,
         type: 'number',
         decimals: 2,
-        url: '#silver'
+        country: 'Råvarer',
+        detail: false
       },
       {
         key: 'bitcoin',
@@ -365,7 +522,8 @@
         reverse: false,
         type: 'number',
         decimals: 0,
-        url: '#bitcoin'
+        country: 'Krypto',
+        detail: false
       },
       {
         key: 'usdnok',
@@ -375,7 +533,8 @@
         reverse: true,
         type: 'number',
         decimals: 4,
-        url: '#usdnok'
+        country: 'Valuta',
+        detail: false
       }
     ];
 
@@ -449,14 +608,18 @@
       const num = Number(signalValue);
 
       if (!Number.isFinite(num) || Math.abs(num) < 0.0001) {
-        return { colorClass: 'yellow' };
+        return { colorClass: 'yellow', text: 'Samme nivå' };
       }
 
       if (reverse) {
-        return num > 0 ? { colorClass: 'red' } : { colorClass: 'green' };
+        return num > 0
+          ? { colorClass: 'red', text: 'Negativ utvikling' }
+          : { colorClass: 'green', text: 'Positiv utvikling' };
       }
 
-      return num > 0 ? { colorClass: 'green' } : { colorClass: 'red' };
+      return num > 0
+        ? { colorClass: 'green', text: 'Positiv utvikling' }
+        : { colorClass: 'red', text: 'Negativ utvikling' };
     }
 
     function buildDisplayValue(rawValue, config) {
@@ -536,9 +699,10 @@
     function renderCards(items) {
       cardsEl.innerHTML = items.map((item) => {
         const state = getState(item.signalValue, item.reverse);
+        const clickAttr = item.detail ? `onclick="openDetail('${item.key}')"` : '';
 
         return `
-          <button class="card-btn" type="button" onclick="openCard('${item.url}')">
+          <button class="card-btn" type="button" ${clickAttr}>
             <article class="card ${state.colorClass}">
               <div class="card-grid">
                 <div class="icon-wrap"><div class="icon">${item.icon}</div></div>
@@ -560,15 +724,45 @@
       }).join('');
     }
 
-    function openCard(url) {
-      window.location.hash = url.replace('#', '');
+    function showScreen(name) {
+      homeScreen.classList.remove('active');
+      detailScreen.classList.remove('active');
+
+      if (name === 'detail') {
+        detailScreen.classList.add('active');
+      } else {
+        homeScreen.classList.add('active');
+      }
+    }
+
+    function openDetail(key) {
+      const item = latestResults.find(x => x.key === key);
+      if (!item) return;
+
+      const state = getState(item.signalValue, item.reverse);
+
+      detailTitle.textContent = item.market;
+      detailValue.textContent = item.valueText;
+      detailPrev.textContent = item.previousText;
+      detailChange.textContent = item.changeText;
+      detailStatus.textContent = state.text;
+
+      showScreen('detail');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function goBack() {
+      showScreen('home');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     async function loadMarkets() {
       refreshBtn.disabled = true;
       refreshBtn.innerHTML = '<span>⟳</span><span>Oppdaterer ...</span>';
+
       try {
         const results = await Promise.all(marketConfig.map(fetchMarket));
+        latestResults = results;
         renderCards(results);
       } catch (error) {
         console.error(error);
@@ -578,8 +772,11 @@
       }
     }
 
+    backBtn.addEventListener('click', goBack);
     refreshBtn.addEventListener('click', loadMarkets);
     loadMarkets();
+
+    window.openDetail = openDetail;
   </script>
 </body>
 </html>

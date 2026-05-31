@@ -416,13 +416,6 @@
       text-overflow:ellipsis;
     }
 
-    .detail-note{
-      margin-top:16px;
-      color:var(--muted);
-      font-size:14px;
-      line-height:1.45;
-    }
-
     @media (max-width:390px){
       .card-grid{
         grid-template-columns:58px 1fr 96px;
@@ -505,10 +498,6 @@
           </svg>
           <div class="mini-labels" id="chartLabels"></div>
         </div>
-
-        <div class="detail-note" id="detailNote">
-          Grafen viser ekte 5-dagers data med ukedager som etiketter.
-        </div>
       </section>
     </section>
   </main>
@@ -530,7 +519,6 @@
     const detailChange = document.getElementById('detailChange');
     const detailStatusText = document.getElementById('detailStatusText');
     const detailStatusPill = document.getElementById('detailStatusPill');
-    const detailNote = document.getElementById('detailNote');
 
     const chartLine = document.getElementById('chartLine');
     const chartFill = document.getElementById('chartFill');
@@ -590,10 +578,10 @@
       },
       {
         key: 'oil',
-        market: 'OLJE WTI',
+        market: 'BRENT OLJE',
         icon: '🩸',
-        endpoint: `${WORKER_BASE}/yahoo?symbol=CL%3DF`,
-        chartEndpoint: `${WORKER_BASE}/yahoo-chart?symbol=CL%3DF&range=5d&interval=1d`,
+        endpoint: `${WORKER_BASE}/yahoo?symbol=BZ%3DF`,
+        chartEndpoint: `${WORKER_BASE}/yahoo-chart?symbol=BZ%3DF&range=5d&interval=1d`,
         reverse: false,
         type: 'number',
         decimals: 2,
@@ -836,7 +824,6 @@
       }
 
       const series = points.map(p => p.close);
-      const width = 320;
       const left = 6;
       const right = 314;
       const top = 12;
@@ -978,8 +965,6 @@
       detailStatusPill.className = `status-pill ${state.colorClass}`;
       detailStatusPill.textContent = state.text;
 
-      detailNote.textContent = `Grafen viser ekte 5-dagers data for ${item.market.toLowerCase()} med ukedager som etiketter.`;
-
       chartLabels.innerHTML = '<span>Laster…</span>';
       chartLine.setAttribute('d', '');
       chartFill.setAttribute('d', '');
@@ -1027,3 +1012,163 @@
   </script>
 </body>
 </html>
+Arbeider
+Hvis du allerede har den nye worker, kan du lade den være. Hvis ikke, så brug denne komplette worker-kode, som passer til HTML'en ovenfor.
+
+js
+export default {
+  async fetch(request) {
+    const url = new URL(request.url);
+
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+      "Content-Type": "application/json; charset=UTF-8"
+    };
+
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: corsHeaders
+      });
+    }
+
+    if (url.pathname === "/yahoo") {
+      return handleYahooQuote(url, corsHeaders);
+    }
+
+    if (url.pathname === "/yahoo-chart") {
+      return handleYahooChart(url, corsHeaders);
+    }
+
+    return new Response(JSON.stringify({
+      ok: true,
+      endpoints: [
+        "/yahoo?symbol=OSEBX.OL",
+        "/yahoo-chart?symbol=OSEBX.OL&range=5d&interval=1d"
+      ]
+    }), {
+      status: 200,
+      headers: corsHeaders
+    });
+  }
+};
+
+async function handleYahooQuote(url, corsHeaders) {
+  const symbol = url.searchParams.get("symbol");
+
+  if (!symbol) {
+    return new Response(JSON.stringify({ error: "Missing symbol" }), {
+      status: 400,
+      headers: corsHeaders
+    });
+  }
+
+  const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=5d&interval=1d&includePrePost=false`;
+
+  const response = await fetch(yahooUrl, {
+    headers: {
+      "User-Agent": "Mozilla/5.0"
+    }
+  });
+
+  if (!response.ok) {
+    return new Response(JSON.stringify({ error: `Yahoo HTTP ${response.status}` }), {
+      status: 502,
+      headers: corsHeaders
+    });
+  }
+
+  const data = await response.json();
+  const result = data?.chart?.result?.[0];
+  const meta = result?.meta || {};
+  const timestamps = result?.timestamp || [];
+  const closes = result?.indicators?.quote?.[0]?.close || [];
+
+  const points = timestamps.map((ts, i) => ({
+    ts: Number(ts),
+    close: Number(closes[i])
+  })).filter(p => Number.isFinite(p.ts) && Number.isFinite(p.close));
+
+  const last = points[points.length - 1] || null;
+  const prev = points[points.length - 2] || null;
+  const prev2 = points[points.length - 3] || null;
+
+  const metaPrice = Number(meta.regularMarketPrice);
+  const metaPreviousClose = Number(meta.previousClose);
+
+  const value = last?.close ?? (Number.isFinite(metaPrice) ? metaPrice : null);
+  const previousClose = prev?.close ?? (Number.isFinite(metaPreviousClose) ? metaPreviousClose : null);
+  const previousPreviousClose = prev2?.close ?? null;
+
+  let change = null;
+  let changePercent = null;
+
+  if (Number.isFinite(value) && Number.isFinite(previousClose) && previousClose !== 0) {
+    change = value - previousClose;
+    changePercent = (change / previousClose) * 100;
+  }
+
+  return new Response(JSON.stringify({
+    symbol,
+    value: Number.isFinite(value) ? value : null,
+    previousClose: Number.isFinite(previousClose) ? previousClose : null,
+    previousPreviousClose: Number.isFinite(previousPreviousClose) ? previousPreviousClose : null,
+    change: Number.isFinite(change) ? change : null,
+    changePercent: Number.isFinite(changePercent) ? changePercent : null,
+    meta,
+    points
+  }), {
+    status: 200,
+    headers: corsHeaders
+  });
+}
+
+async function handleYahooChart(url, corsHeaders) {
+  const symbol = url.searchParams.get("symbol");
+  const range = url.searchParams.get("range") || "5d";
+  const interval = url.searchParams.get("interval") || "1d";
+
+  if (!symbol) {
+    return new Response(JSON.stringify({ error: "Missing symbol" }), {
+      status: 400,
+      headers: corsHeaders
+    });
+  }
+
+  const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${encodeURIComponent(range)}&interval=${encodeURIComponent(interval)}&includePrePost=false`;
+
+  const response = await fetch(yahooUrl, {
+    headers: {
+      "User-Agent": "Mozilla/5.0"
+    }
+  });
+
+  if (!response.ok) {
+    return new Response(JSON.stringify({ error: `Yahoo HTTP ${response.status}` }), {
+      status: 502,
+      headers: corsHeaders
+    });
+  }
+
+  const data = await response.json();
+  const result = data?.chart?.result?.[0];
+  const timestamps = result?.timestamp || [];
+  const closes = result?.indicators?.quote?.[0]?.close || [];
+
+  const points = timestamps.map((ts, i) => ({
+    ts: Number(ts),
+    close: Number(closes[i])
+  })).filter(p => Number.isFinite(p.ts) && Number.isFinite(p.close));
+
+  return new Response(JSON.stringify({
+    symbol,
+    range,
+    interval,
+    points
+  }), {
+    status: 200,
+    headers: corsHeaders
+  });
+}

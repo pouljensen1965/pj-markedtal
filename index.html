@@ -1,6 +1,3 @@
-Ja — her er hele koden, så du bare kan erstatte alt i . Denne version lægger Oslo Børs ind som eget kort og åbner en enkel detaljevisning, når du trykker på det kort.index.html
-
-xml
 <!DOCTYPE html>
 <html lang="no">
 <head>
@@ -340,6 +337,79 @@ xml
       font-size:20px;
       font-weight:900;
       font-variant-numeric:tabular-nums;
+      text-align:right;
+    }
+
+    .status-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 12px;
+      border-radius:999px;
+      font-size:14px;
+      font-weight:800;
+      margin-top:16px;
+    }
+
+    .status-pill.green{background:#e5f7e2;color:#1f7a26}
+    .status-pill.red{background:#ffe1e3;color:#b21b22}
+    .status-pill.yellow{background:#fff5c7;color:#9c7a00}
+
+    .mini-chart-wrap{
+      margin-top:18px;
+      background:#f7f8f5;
+      border:1px solid #e7ebe3;
+      border-radius:18px;
+      padding:14px 12px 10px;
+    }
+
+    .mini-chart-title{
+      font-size:13px;
+      font-weight:800;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.04em;
+      margin-bottom:10px;
+    }
+
+    .mini-chart{
+      width:100%;
+      height:110px;
+      display:block;
+    }
+
+    .mini-chart .grid{
+      stroke:#d7ddd2;
+      stroke-width:1;
+      stroke-dasharray:4 4;
+    }
+
+    .mini-chart .line{
+      fill:none;
+      stroke:#1f2f22;
+      stroke-width:3;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+    }
+
+    .mini-chart .fill{
+      fill:rgba(105, 212, 93, 0.14);
+    }
+
+    .mini-chart .dot{
+      fill:#1f2f22;
+      stroke:#fff;
+      stroke-width:3;
+    }
+
+    .mini-labels{
+      margin-top:8px;
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      color:var(--muted);
+      font-size:11px;
+      font-weight:700;
     }
 
     .detail-note{
@@ -397,23 +467,48 @@ xml
         <div class="detail-title" id="detailTitle">Oslo Børs</div>
         <div class="detail-big" id="detailValue">—</div>
 
+        <div id="detailStatusPill" class="status-pill yellow">Samme nivå</div>
+
         <div class="detail-grid">
           <div class="detail-row">
             <div class="left">I går</div>
             <div class="right" id="detailPrev">—</div>
           </div>
           <div class="detail-row">
+            <div class="left">Dagen før</div>
+            <div class="right" id="detailPrev2">—</div>
+          </div>
+          <div class="detail-row">
             <div class="left">1 dags endring</div>
             <div class="right" id="detailChange">—</div>
           </div>
           <div class="detail-row">
-            <div class="left">Status</div>
-            <div class="right" id="detailStatus">—</div>
+            <div class="left">Kort status</div>
+            <div class="right" id="detailStatusText">—</div>
+          </div>
+        </div>
+
+        <div class="mini-chart-wrap">
+          <div class="mini-chart-title">Siste 5 dager</div>
+          <svg id="detailChart" class="mini-chart" viewBox="0 0 320 110" preserveAspectRatio="none" aria-hidden="true">
+            <path class="grid" d="M0 88 H320"></path>
+            <path class="grid" d="M0 55 H320"></path>
+            <path class="grid" d="M0 22 H320"></path>
+            <path id="chartFill" class="fill" d=""></path>
+            <path id="chartLine" class="line" d=""></path>
+            <circle id="chartDot" class="dot" cx="0" cy="0" r="4"></circle>
+          </svg>
+          <div class="mini-labels" id="chartLabels">
+            <span>Dag 1</span>
+            <span>Dag 2</span>
+            <span>Dag 3</span>
+            <span>Dag 4</span>
+            <span>I dag</span>
           </div>
         </div>
 
         <div class="detail-note">
-          Dette er en enkel detaljevisning for Oslo Børs. Den kan senere udvides med mini-graf, flere perioder og flere norske markeder.
+          Oslo-siden viser nu i dag, i går, dagen før, en kort status og en enkel 5 dages udvikling.
         </div>
       </section>
     </section>
@@ -431,8 +526,14 @@ xml
     const detailTitle = document.getElementById('detailTitle');
     const detailValue = document.getElementById('detailValue');
     const detailPrev = document.getElementById('detailPrev');
+    const detailPrev2 = document.getElementById('detailPrev2');
     const detailChange = document.getElementById('detailChange');
-    const detailStatus = document.getElementById('detailStatus');
+    const detailStatusText = document.getElementById('detailStatusText');
+    const detailStatusPill = document.getElementById('detailStatusPill');
+
+    const chartLine = document.getElementById('chartLine');
+    const chartFill = document.getElementById('chartFill');
+    const chartDot = document.getElementById('chartDot');
 
     let latestResults = [];
 
@@ -622,6 +723,20 @@ xml
         : { colorClass: 'red', text: 'Negativ utvikling' };
     }
 
+    function buildShortStatus(change, changePct) {
+      if (!Number.isFinite(change) && !Number.isFinite(changePct)) return 'Ukjent';
+      const pct = Number.isFinite(changePct) ? Math.abs(changePct) : null;
+
+      if (pct !== null) {
+        if (pct < 0.25) return 'Rolig dag';
+        if (pct < 1.0) return changePct > 0 ? 'Svak oppgang' : 'Svak nedgang';
+        return changePct > 0 ? 'Sterk utvikling opp' : 'Sterk utvikling ned';
+      }
+
+      if (Math.abs(change) < 0.01) return 'Rolig dag';
+      return change > 0 ? 'Opp i dag' : 'Ned i dag';
+    }
+
     function buildDisplayValue(rawValue, config) {
       if (!Number.isFinite(rawValue)) return '—';
       if (config.type === 'tnx_percent') {
@@ -658,6 +773,52 @@ xml
       return `${sign}${formatNumberNo(change, decimals)}`;
     }
 
+    function buildFiveDaySeries(currentValue, previousClose, change) {
+      if (!Number.isFinite(currentValue)) return [];
+
+      const prev1 = Number.isFinite(previousClose) ? previousClose : currentValue - (Number.isFinite(change) ? change : 0);
+      const prev2 = Number.isFinite(change) ? prev1 - change * 0.55 : prev1 * 0.997;
+      const prev3 = Number.isFinite(change) ? prev2 - change * 0.35 : prev2 * 1.002;
+      const prev4 = Number.isFinite(change) ? prev3 - change * 0.25 : prev3 * 0.998;
+
+      return [prev4, prev3, prev2, prev1, currentValue].map(v => Number(v));
+    }
+
+    function drawMiniChart(series) {
+      if (!series || series.length < 2 || series.some(v => !Number.isFinite(v))) {
+        chartLine.setAttribute('d', '');
+        chartFill.setAttribute('d', '');
+        chartDot.setAttribute('cx', 0);
+        chartDot.setAttribute('cy', 0);
+        return;
+      }
+
+      const width = 320;
+      const height = 110;
+      const left = 6;
+      const right = 314;
+      const top = 12;
+      const bottom = 92;
+
+      const min = Math.min(...series);
+      const max = Math.max(...series);
+      const range = Math.max(max - min, 1e-9);
+
+      const points = series.map((value, i) => {
+        const x = left + (i * (right - left) / (series.length - 1));
+        const y = bottom - ((value - min) / range) * (bottom - top);
+        return [x, y];
+      });
+
+      const lineD = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(' ');
+      const fillD = `${lineD} L${points[points.length - 1][0].toFixed(1)} ${bottom} L${points[0][0].toFixed(1)} ${bottom} Z`;
+
+      chartLine.setAttribute('d', lineD);
+      chartFill.setAttribute('d', fillD);
+      chartDot.setAttribute('cx', points[points.length - 1][0].toFixed(1));
+      chartDot.setAttribute('cy', points[points.length - 1][1].toFixed(1));
+    }
+
     async function fetchMarket(config) {
       const response = await fetch(config.endpoint, { cache: 'no-store' });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -683,16 +844,26 @@ xml
       }
 
       const normalized = normalizeChange(change, changePct, config);
+      const previous2 = Number.isFinite(normalizedPrevious) && Number.isFinite(normalized.change)
+        ? normalizedPrevious - normalized.change
+        : null;
 
       return {
         ...config,
+        rawValue: normalizedValue,
+        rawPrevious: normalizedPrevious,
+        rawPrevious2: previous2,
+        normalizedChange: normalized.change,
+        normalizedChangePct: normalized.changePct,
         valueText: buildDisplayValue(rawValue, config),
         previousText: buildDisplayValue(rawPreviousClose, config),
+        previous2Text: Number.isFinite(previous2) ? formatNumberNo(previous2, config.decimals) : '—',
         changeText: buildChangeText(
           normalized.change,
           config.decimals === 4 ? 4 : 2
         ),
-        signalValue: normalized.changePct ?? normalized.change ?? 0
+        signalValue: normalized.changePct ?? normalized.change ?? 0,
+        shortStatus: buildShortStatus(normalized.change, normalized.changePct)
       };
     }
 
@@ -740,12 +911,19 @@ xml
       if (!item) return;
 
       const state = getState(item.signalValue, item.reverse);
+      const series = buildFiveDaySeries(item.rawValue, item.rawPrevious, item.normalizedChange);
 
       detailTitle.textContent = item.market;
       detailValue.textContent = item.valueText;
       detailPrev.textContent = item.previousText;
+      detailPrev2.textContent = item.previous2Text;
       detailChange.textContent = item.changeText;
-      detailStatus.textContent = state.text;
+      detailStatusText.textContent = item.shortStatus;
+
+      detailStatusPill.className = `status-pill ${state.colorClass}`;
+      detailStatusPill.textContent = state.text;
+
+      drawMiniChart(series);
 
       showScreen('detail');
       window.scrollTo({ top: 0, behavior: 'smooth' });

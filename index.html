@@ -1,3 +1,23 @@
+Ja — du har helt ret. For VIX og US10Y skal farven godt nok være omvendt, men teksten i højre hjørne skal også følge den omvendte logik. Når de falder, skal de derfor ikke stå som OPP; de skal stå som noget i retning af BEDRE eller NED, alt efter hvad du vil kalde det.
+
+Hvad der er galt nu
+På billedet er VIX og US10Y grønne, fordi fald er positivt for dem, og det er korrekt. Men badge-teksten i højre hjørne siger stadig OPP, og det er misvisende, fordi selve bevægelsen jo går ned.
+
+Den rigtige løsning
+Den bedste løsning er at lade badge-teksten beskrive retningen i tallet, ikke om det er godt eller dårligt. Så bliver det:
+
+NED når tallet falder
+
+OPP når tallet stiger
+
+SAMME NIVÅ når det er uændret[ file:366]
+
+Farven kan stadig være omvendt for VIX, US10Y og USD/NOK.
+
+Hele den rigtige kode
+Her får du hele HTML-koden igen, hvor jeg har rettet det, så badge-teksten følger den faktiske retning, mens farven stadig kan være omvendt for VIX, US10Y og USD/NOK.
+
+xml
 <!DOCTYPE html>
 <html lang="no">
 <head>
@@ -435,17 +455,22 @@
 
     function getState(signalValue, reverse = false) {
       const num = Number(signalValue);
+
       if (!Number.isFinite(num) || Math.abs(num) < 0.0001) {
         return { colorClass: 'yellow', badge: 'SAMME NIVÅ' };
       }
+
+      const directionBadge = num > 0 ? 'OPP' : 'NED';
+
       if (reverse) {
         return num > 0
-          ? { colorClass: 'red', badge: 'NED' }
-          : { colorClass: 'green', badge: 'OPP' };
+          ? { colorClass: 'red', badge: directionBadge }
+          : { colorClass: 'green', badge: directionBadge };
       }
+
       return num > 0
-        ? { colorClass: 'green', badge: 'OPP' }
-        : { colorClass: 'red', badge: 'NED' };
+        ? { colorClass: 'green', badge: directionBadge }
+        : { colorClass: 'red', badge: directionBadge };
     }
 
     function buildDisplayValue(rawValue, config) {

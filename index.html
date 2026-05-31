@@ -468,7 +468,7 @@
       </section>
 
       <section class="detail-card">
-        <div class="detail-label">INDEKS · NORGE</div>
+        <div class="detail-label" id="detailLabel">INDEKS · NORGE</div>
         <div class="detail-title" id="detailTitle">Oslo Børs</div>
         <div class="detail-big" id="detailValue">—</div>
 
@@ -506,8 +506,8 @@
           <div class="mini-labels" id="chartLabels"></div>
         </div>
 
-        <div class="detail-note">
-          Grafen viser ekte 5-dagers data med ugedager som etiketter.
+        <div class="detail-note" id="detailNote">
+          Grafen viser ekte 5-dagers data med ukedager som etiketter.
         </div>
       </section>
     </section>
@@ -522,6 +522,7 @@
     const detailScreen = document.getElementById('detailScreen');
     const backBtn = document.getElementById('backBtn');
 
+    const detailLabel = document.getElementById('detailLabel');
     const detailTitle = document.getElementById('detailTitle');
     const detailValue = document.getElementById('detailValue');
     const detailPrev = document.getElementById('detailPrev');
@@ -529,6 +530,7 @@
     const detailChange = document.getElementById('detailChange');
     const detailStatusText = document.getElementById('detailStatusText');
     const detailStatusPill = document.getElementById('detailStatusPill');
+    const detailNote = document.getElementById('detailNote');
 
     const chartLine = document.getElementById('chartLine');
     const chartFill = document.getElementById('chartFill');
@@ -555,88 +557,96 @@
         market: 'VIX VOLATILITET',
         icon: '🛡️',
         endpoint: `${WORKER_BASE}/yahoo?symbol=%5EVIX`,
+        chartEndpoint: `${WORKER_BASE}/yahoo-chart?symbol=%5EVIX&range=5d&interval=1d`,
         reverse: true,
         type: 'number',
         decimals: 1,
         country: 'USA',
-        detail: false
+        detail: true
       },
       {
         key: 'us10y',
         market: 'US10Y RENTE',
         icon: '🏛️',
         endpoint: `${WORKER_BASE}/yahoo?symbol=%5ETNX`,
+        chartEndpoint: `${WORKER_BASE}/yahoo-chart?symbol=%5ETNX&range=5d&interval=1d`,
         reverse: true,
         type: 'tnx_percent',
         decimals: 2,
         country: 'USA',
-        detail: false
+        detail: true
       },
       {
         key: 'sp500',
         market: 'S&P 500 USA',
         icon: '📈',
         endpoint: `${WORKER_BASE}/yahoo?symbol=%5EGSPC`,
+        chartEndpoint: `${WORKER_BASE}/yahoo-chart?symbol=%5EGSPC&range=5d&interval=1d`,
         reverse: false,
         type: 'number',
         decimals: 0,
         country: 'USA',
-        detail: false
+        detail: true
       },
       {
         key: 'oil',
         market: 'OLJE WTI',
         icon: '🩸',
         endpoint: `${WORKER_BASE}/yahoo?symbol=CL%3DF`,
+        chartEndpoint: `${WORKER_BASE}/yahoo-chart?symbol=CL%3DF&range=5d&interval=1d`,
         reverse: false,
         type: 'number',
         decimals: 2,
         country: 'Råvarer',
-        detail: false
+        detail: true
       },
       {
         key: 'gold',
         market: 'GULL SPOT',
         icon: '🪙',
         endpoint: `${WORKER_BASE}/yahoo?symbol=GC%3DF`,
+        chartEndpoint: `${WORKER_BASE}/yahoo-chart?symbol=GC%3DF&range=5d&interval=1d`,
         reverse: false,
         type: 'number',
         decimals: 0,
         country: 'Råvarer',
-        detail: false
+        detail: true
       },
       {
         key: 'silver',
         market: 'SØLV SPOT',
         icon: '🥈',
         endpoint: `${WORKER_BASE}/yahoo?symbol=SI%3DF`,
+        chartEndpoint: `${WORKER_BASE}/yahoo-chart?symbol=SI%3DF&range=5d&interval=1d`,
         reverse: false,
         type: 'number',
         decimals: 2,
         country: 'Råvarer',
-        detail: false
+        detail: true
       },
       {
         key: 'bitcoin',
         market: 'BITCOIN (USD)',
         icon: '₿',
         endpoint: `${WORKER_BASE}/yahoo?symbol=BTC-USD`,
+        chartEndpoint: `${WORKER_BASE}/yahoo-chart?symbol=BTC-USD&range=5d&interval=1d`,
         reverse: false,
         type: 'number',
         decimals: 0,
         country: 'Krypto',
-        detail: false
+        detail: true
       },
       {
         key: 'usdnok',
         market: 'USD / NOK',
         icon: '💵',
         endpoint: `${WORKER_BASE}/yahoo?symbol=USDNOK%3DX`,
+        chartEndpoint: `${WORKER_BASE}/yahoo-chart?symbol=USDNOK%3DX&range=5d&interval=1d`,
         reverse: true,
         type: 'number',
         decimals: 4,
         country: 'Valuta',
-        detail: false
+        detail: true
       }
     ];
 
@@ -653,7 +663,8 @@
         data?.price,
         data?.regularMarketPrice,
         data?.currentPrice,
-        data?.close
+        data?.close,
+        data?.quoteResponse?.result?.[0]?.regularMarketPrice
       ];
       for (const candidate of candidates) {
         const num = Number(candidate);
@@ -666,7 +677,8 @@
       const candidates = [
         data?.previousClose,
         data?.chartPreviousClose,
-        data?.meta?.previousClose
+        data?.meta?.previousClose,
+        data?.quoteResponse?.result?.[0]?.regularMarketPreviousClose
       ];
       for (const candidate of candidates) {
         const num = Number(candidate);
@@ -677,7 +689,8 @@
 
     function parseWorkerPreviousPreviousClose(data) {
       const candidates = [
-        data?.previousPreviousClose
+        data?.previousPreviousClose,
+        data?.meta?.previousPreviousClose
       ];
       for (const candidate of candidates) {
         const num = Number(candidate);
@@ -690,12 +703,14 @@
       const valueCandidates = [
         data?.change,
         data?.regularMarketChange,
-        data?.priceChange
+        data?.priceChange,
+        data?.quoteResponse?.result?.[0]?.regularMarketChange
       ];
       const pctCandidates = [
         data?.changePercent,
         data?.regularMarketChangePercent,
-        data?.percentChange
+        data?.percentChange,
+        data?.quoteResponse?.result?.[0]?.regularMarketChangePercent
       ];
 
       let change = null;
@@ -773,19 +788,28 @@
       return { change, changePct };
     }
 
-    function buildChangeText(change, decimals = 2) {
+    function buildChangeText(change, config) {
       if (!Number.isFinite(change)) return '—';
+
+      const decimals = config.type === 'tnx_percent'
+        ? 2
+        : (config.decimals === 4 ? 4 : 2);
+
       const sign = change > 0 ? '+' : '';
-      return `${sign}${formatNumberNo(change, decimals)}`;
+      const body = formatNumberNo(change, decimals);
+      return config.type === 'tnx_percent' ? `${sign}${body}%` : `${sign}${body}`;
     }
 
     function getNorwegianWeekday(ts) {
-      return new Date(ts * 1000)
-        .toLocaleDateString('nb-NO', { weekday: 'short' })
-        .replace('.', '');
+      return new Date(ts * 1000).toLocaleDateString('nb-NO', { weekday: 'short' });
     }
 
-    async function fetchFiveDaySeries(url) {
+    function normalizeWeekdayLabel(label) {
+      if (!label) return '';
+      return label.replace('.', '');
+    }
+
+    async function fetchFiveDaySeries(url, config) {
       const response = await fetch(url, { cache: 'no-store' });
       if (!response.ok) throw new Error(`Chart HTTP ${response.status}`);
 
@@ -793,28 +817,26 @@
       const points = Array.isArray(data?.points) ? data.points : [];
 
       return points
-        .map(p => ({ ts: Number(p.ts), close: Number(p.close) }))
-        .filter(p => Number.isFinite(p.ts) && Number.isFinite(p.close))
+        .map(point => ({
+          ts: Number(point.ts),
+          close: normalizeRawValue(Number(point.close), config)
+        }))
+        .filter(point => Number.isFinite(point.ts) && Number.isFinite(point.close))
         .slice(-5);
-    }
-
-    function resetChart(message = '') {
-      chartLine.setAttribute('d', '');
-      chartFill.setAttribute('d', '');
-      chartDot.setAttribute('cx', 0);
-      chartDot.setAttribute('cy', 0);
-      chartLabels.innerHTML = message
-        ? `<span style="flex:1;text-align:center">${message}</span>`
-        : '';
     }
 
     function drawMiniChart(points) {
       if (!points || points.length < 2) {
-        resetChart('Ingen grafdata');
+        chartLine.setAttribute('d', '');
+        chartFill.setAttribute('d', '');
+        chartDot.setAttribute('cx', 0);
+        chartDot.setAttribute('cy', 0);
+        chartLabels.innerHTML = '';
         return;
       }
 
       const series = points.map(p => p.close);
+      const width = 320;
       const left = 6;
       const right = 314;
       const top = 12;
@@ -822,7 +844,7 @@
 
       const min = Math.min(...series);
       const max = Math.max(...series);
-      const range = Math.max(max - min, 0.0001);
+      const range = Math.max(max - min, 1e-9);
 
       const coords = series.map((value, i) => {
         const x = left + (i * (right - left) / Math.max(series.length - 1, 1));
@@ -837,7 +859,11 @@
       chartFill.setAttribute('d', fillD);
       chartDot.setAttribute('cx', coords[coords.length - 1][0].toFixed(1));
       chartDot.setAttribute('cy', coords[coords.length - 1][1].toFixed(1));
-      chartLabels.innerHTML = points.map(point => `<span>${getNorwegianWeekday(point.ts)}</span>`).join('');
+
+      chartLabels.innerHTML = points.map(point => {
+        const label = normalizeWeekdayLabel(getNorwegianWeekday(point.ts));
+        return `<span>${label}</span>`;
+      }).join('');
     }
 
     async function fetchMarket(config) {
@@ -853,7 +879,7 @@
 
       const normalizedValue = normalizeRawValue(rawValue, config);
       const normalizedPrevious = normalizeRawValue(rawPreviousClose, config);
-      const normalizedPrevious2 = normalizeRawValue(rawPreviousPreviousClose, config);
+      let normalizedPrevious2 = normalizeRawValue(rawPreviousPreviousClose, config);
 
       let change = rawChange;
       let changePct = rawChangePct;
@@ -868,6 +894,10 @@
 
       const normalized = normalizeChange(change, changePct, config);
 
+      if (!Number.isFinite(normalizedPrevious2) && Number.isFinite(normalizedPrevious) && Number.isFinite(normalized.change)) {
+        normalizedPrevious2 = normalizedPrevious - normalized.change;
+      }
+
       return {
         ...config,
         rawValue: normalizedValue,
@@ -877,8 +907,8 @@
         normalizedChangePct: normalized.changePct,
         valueText: buildDisplayValue(rawValue, config),
         previousText: buildDisplayValue(rawPreviousClose, config),
-        previous2Text: buildDisplayValue(rawPreviousPreviousClose, config),
-        changeText: buildChangeText(normalized.change, config.decimals === 4 ? 4 : 2),
+        previous2Text: Number.isFinite(normalizedPrevious2) ? buildDisplayValue(normalizedPrevious2, config) : '—',
+        changeText: buildChangeText(normalized.change, config),
         signalValue: normalized.changePct ?? normalized.change ?? 0,
         shortStatus: buildShortStatus(normalized.change, normalized.changePct)
       };
@@ -916,8 +946,11 @@
       homeScreen.classList.remove('active');
       detailScreen.classList.remove('active');
 
-      if (name === 'detail') detailScreen.classList.add('active');
-      else homeScreen.classList.add('active');
+      if (name === 'detail') {
+        detailScreen.classList.add('active');
+      } else {
+        homeScreen.classList.add('active');
+      }
     }
 
     async function openDetail(key) {
@@ -925,6 +958,15 @@
       if (!item) return;
 
       const state = getState(item.signalValue, item.reverse);
+
+      detailLabel.textContent = `${item.country.toUpperCase()} · MARKED`;
+      if (item.key === 'oslobors') detailLabel.textContent = 'INDEKS · NORGE';
+      if (item.key === 'vix') detailLabel.textContent = 'VOLATILITET · USA';
+      if (item.key === 'us10y') detailLabel.textContent = 'RENTE · USA';
+      if (item.key === 'sp500') detailLabel.textContent = 'INDEKS · USA';
+      if (item.key === 'oil' || item.key === 'gold' || item.key === 'silver') detailLabel.textContent = 'RÅVARE · GLOBALT';
+      if (item.key === 'bitcoin') detailLabel.textContent = 'KRYPTO · GLOBALT';
+      if (item.key === 'usdnok') detailLabel.textContent = 'VALUTA · NORGE';
 
       detailTitle.textContent = item.market;
       detailValue.textContent = item.valueText;
@@ -936,17 +978,24 @@
       detailStatusPill.className = `status-pill ${state.colorClass}`;
       detailStatusPill.textContent = state.text;
 
-      resetChart('Laster graf…');
-      showScreen('detail');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      detailNote.textContent = `Grafen viser ekte 5-dagers data for ${item.market.toLowerCase()} med ukedager som etiketter.`;
+
+      chartLabels.innerHTML = '<span>Laster…</span>';
+      chartLine.setAttribute('d', '');
+      chartFill.setAttribute('d', '');
+      chartDot.setAttribute('cx', 0);
+      chartDot.setAttribute('cy', 0);
 
       try {
-        const points = await fetchFiveDaySeries(item.chartEndpoint);
+        const points = await fetchFiveDaySeries(item.chartEndpoint, item);
         drawMiniChart(points);
       } catch (error) {
         console.error(error);
-        resetChart('Ingen grafdata');
+        chartLabels.innerHTML = '<span>Ingen grafdata</span>';
       }
+
+      showScreen('detail');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function goBack() {
@@ -978,3 +1027,163 @@
   </script>
 </body>
 </html>
+Worker-koden
+Du skal stadig bruke worker-versionen med både og , fordi HTML'en forventer begge endpoints. Hvis din worker allerede er oppdatert til den version, behøver du ikke endre mere dér./yahoo/yahoo-chart
+
+js
+export default {
+  async fetch(request) {
+    const url = new URL(request.url);
+
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+      "Content-Type": "application/json; charset=UTF-8"
+    };
+
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: corsHeaders
+      });
+    }
+
+    if (url.pathname === "/yahoo") {
+      return handleYahooQuote(url, corsHeaders);
+    }
+
+    if (url.pathname === "/yahoo-chart") {
+      return handleYahooChart(url, corsHeaders);
+    }
+
+    return new Response(JSON.stringify({
+      ok: true,
+      endpoints: [
+        "/yahoo?symbol=OSEBX.OL",
+        "/yahoo-chart?symbol=OSEBX.OL&range=5d&interval=1d"
+      ]
+    }), {
+      status: 200,
+      headers: corsHeaders
+    });
+  }
+};
+
+async function handleYahooQuote(url, corsHeaders) {
+  const symbol = url.searchParams.get("symbol");
+
+  if (!symbol) {
+    return new Response(JSON.stringify({ error: "Missing symbol" }), {
+      status: 400,
+      headers: corsHeaders
+    });
+  }
+
+  const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=5d&interval=1d&includePrePost=false`;
+
+  const response = await fetch(yahooUrl, {
+    headers: {
+      "User-Agent": "Mozilla/5.0"
+    }
+  });
+
+  if (!response.ok) {
+    return new Response(JSON.stringify({ error: `Yahoo HTTP ${response.status}` }), {
+      status: 502,
+      headers: corsHeaders
+    });
+  }
+
+  const data = await response.json();
+  const result = data?.chart?.result?.[0];
+  const meta = result?.meta || {};
+  const timestamps = result?.timestamp || [];
+  const closes = result?.indicators?.quote?.[0]?.close || [];
+
+  const points = timestamps.map((ts, i) => ({
+    ts: Number(ts),
+    close: Number(closes[i])
+  })).filter(p => Number.isFinite(p.ts) && Number.isFinite(p.close));
+
+  const last = points[points.length - 1] || null;
+  const prev = points[points.length - 2] || null;
+  const prev2 = points[points.length - 3] || null;
+
+  const metaPrice = Number(meta.regularMarketPrice);
+  const metaPreviousClose = Number(meta.previousClose);
+
+  const value = last?.close ?? (Number.isFinite(metaPrice) ? metaPrice : null);
+  const previousClose = prev?.close ?? (Number.isFinite(metaPreviousClose) ? metaPreviousClose : null);
+  const previousPreviousClose = prev2?.close ?? null;
+
+  let change = null;
+  let changePercent = null;
+
+  if (Number.isFinite(value) && Number.isFinite(previousClose) && previousClose !== 0) {
+    change = value - previousClose;
+    changePercent = (change / previousClose) * 100;
+  }
+
+  return new Response(JSON.stringify({
+    symbol,
+    value: Number.isFinite(value) ? value : null,
+    previousClose: Number.isFinite(previousClose) ? previousClose : null,
+    previousPreviousClose: Number.isFinite(previousPreviousClose) ? previousPreviousClose : null,
+    change: Number.isFinite(change) ? change : null,
+    changePercent: Number.isFinite(changePercent) ? changePercent : null,
+    meta,
+    points
+  }), {
+    status: 200,
+    headers: corsHeaders
+  });
+}
+
+async function handleYahooChart(url, corsHeaders) {
+  const symbol = url.searchParams.get("symbol");
+  const range = url.searchParams.get("range") || "5d";
+  const interval = url.searchParams.get("interval") || "1d";
+
+  if (!symbol) {
+    return new Response(JSON.stringify({ error: "Missing symbol" }), {
+      status: 400,
+      headers: corsHeaders
+    });
+  }
+
+  const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${encodeURIComponent(range)}&interval=${encodeURIComponent(interval)}&includePrePost=false`;
+
+  const response = await fetch(yahooUrl, {
+    headers: {
+      "User-Agent": "Mozilla/5.0"
+    }
+  });
+
+  if (!response.ok) {
+    return new Response(JSON.stringify({ error: `Yahoo HTTP ${response.status}` }), {
+      status: 502,
+      headers: corsHeaders
+    });
+  }
+
+  const data = await response.json();
+  const result = data?.chart?.result?.[0];
+  const timestamps = result?.timestamp || [];
+  const closes = result?.indicators?.quote?.[0]?.close || [];
+
+  const points = timestamps.map((ts, i) => ({
+    ts: Number(ts),
+    close: Number(closes[i])
+  })).filter(p => Number.isFinite(p.ts) && Number.isFinite(p.close));
+
+  return new Response(JSON.stringify({
+    symbol,
+    range,
+    interval,
+    points
+  }), {
+    status: 200,
+    headers: corsHeaders
+  });
+}

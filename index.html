@@ -9,7 +9,8 @@
     :root{
       --bg:#efefe9;
       --text:#202320;
-      --muted:#768072;
+      --muted:#6f786c;
+      --muted-2:#879082;
       --green:#69d45d;
       --red:#ff1f26;
       --yellow:#f2cb27;
@@ -78,7 +79,7 @@
     }
 
     .update-btn:disabled{
-      opacity:.7;
+      opacity:.75;
       cursor:default;
     }
 
@@ -90,7 +91,7 @@
 
     .card{
       border-radius:22px;
-      padding:16px 16px 16px 14px;
+      padding:16px 16px 14px 14px;
       color:#fff;
       position:relative;
       overflow:hidden;
@@ -135,24 +136,37 @@
 
     .value{
       font-size:28px;
-      line-height:1.05;
+      line-height:1.02;
       font-weight:900;
       margin-top:4px;
       font-variant-numeric:tabular-nums;
       letter-spacing:-0.03em;
     }
 
-    .change{
-      font-size:14px;
+    .meta-stack{
       margin-top:8px;
-      font-weight:800;
-      opacity:.98;
+      display:grid;
+      gap:2px;
+    }
+
+    .meta-line{
+      font-size:12px;
+      line-height:1.18;
+      font-weight:700;
+      opacity:.96;
+      font-variant-numeric:tabular-nums;
+    }
+
+    .meta-line .label{
+      opacity:.88;
+      margin-right:6px;
     }
 
     .period{
-      font-size:12px;
-      opacity:.92;
-      margin-top:3px;
+      font-size:11px;
+      line-height:1.15;
+      opacity:.9;
+      margin-top:2px;
     }
 
     .trend{
@@ -249,6 +263,8 @@
       .sub{font-size:15px;max-width:200px}
       .value{font-size:24px}
       .badge{font-size:12px;padding:6px 10px}
+      .meta-line{font-size:11px}
+      .period{font-size:10px}
     }
   </style>
 </head>
@@ -385,6 +401,20 @@
       return null;
     }
 
+    function parseWorkerPreviousClose(data) {
+      const candidates = [
+        data?.previousClose,
+        data?.chartPreviousClose,
+        data?.meta?.previousClose,
+        data?.quoteResponse?.result?.[0]?.regularMarketPreviousClose
+      ];
+      for (const candidate of candidates) {
+        const num = Number(candidate);
+        if (Number.isFinite(num)) return num;
+      }
+      return null;
+    }
+
     function parseWorkerChange(data) {
       const valueCandidates = [
         data?.change,
@@ -429,15 +459,21 @@
         : { colorClass: 'red', badge: 'NED' };
     }
 
-    function buildValue(rawValue, config) {
+    function buildDisplayValue(rawValue, config) {
       if (!Number.isFinite(rawValue)) return '—';
-
       if (config.type === 'tnx_percent') {
         const value = rawValue > 20 ? rawValue / 10 : rawValue;
         return `${formatNumberNo(value, config.decimals)}%`;
       }
-
       return formatNumberNo(rawValue, config.decimals);
+    }
+
+    function normalizeRawValue(rawValue, config) {
+      if (!Number.isFinite(rawValue)) return null;
+      if (config.type === 'tnx_percent') {
+        return rawValue > 20 ? rawValue / 10 : rawValue;
+      }
+      return rawValue;
     }
 
     function normalizeChange(rawChange, rawChangePct, config) {
@@ -454,10 +490,12 @@
     function buildChangeText(change, changePct, decimals = 2) {
       const hasChange = Number.isFinite(change);
       const hasPct = Number.isFinite(changePct);
-      if (!hasChange && !hasPct) return 'Live';
+
+      if (!hasChange && !hasPct) return '—';
 
       const sign = hasChange && change > 0 ? '+' : '';
       const valueText = hasChange ? `${sign}${formatNumberNo(change, decimals)}` : '';
+
       const pctSign = hasPct && changePct > 0 ? '+' : '';
       const pctText = hasPct ? ` (${pctSign}${formatNumberNo(changePct, 2)}%)` : '';
 
@@ -469,13 +507,32 @@
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
       const data = await response.json();
+
       const rawValue = parseWorkerValue(data);
+      const rawPreviousClose = parseWorkerPreviousClose(data);
       const { change: rawChange, changePct: rawChangePct } = parseWorkerChange(data);
-      const normalized = normalizeChange(rawChange, rawChangePct, config);
+
+      const normalizedValue = normalizeRawValue(rawValue, config);
+      const normalizedPrevious = normalizeRawValue(rawPreviousClose, config);
+
+      let change = rawChange;
+      let changePct = rawChangePct;
+
+      if (!Number.isFinite(change) && Number.isFinite(normalizedValue) && Number.isFinite(normalizedPrevious)) {
+        change = normalizedValue - normalizedPrevious;
+      }
+
+      if (!Number.isFinite(changePct) && Number.isFinite(change) && Number.isFinite(normalizedPrevious) && normalizedPrevious !== 0) {
+        changePct = (change / normalizedPrevious) * 100;
+      }
+
+      const normalized = normalizeChange(change, changePct, config);
 
       return {
         ...config,
-        valueText: buildValue(rawValue, config),
+        valueText: buildDisplayValue(rawValue, config),
+        todayText: buildDisplayValue(rawValue, config),
+        previousText: buildDisplayValue(rawPreviousClose, config),
         changeText: buildChangeText(
           normalized.change,
           normalized.changePct,
@@ -489,6 +546,7 @@
     function renderCards(items) {
       cardsEl.innerHTML = items.map((item) => {
         const state = getState(item.signalValue, item.reverse);
+
         return `
           <article class="card ${state.colorClass}">
             <div class="card-grid">
@@ -496,7 +554,11 @@
               <div>
                 <div class="market">${item.market}</div>
                 <div class="value">${item.valueText}</div>
-                <div class="change">${item.changeText}</div>
+                <div class="meta-stack">
+                  <div class="meta-line"><span class="label">I dag</span>${item.todayText}</div>
+                  <div class="meta-line"><span class="label">I går</span>${item.previousText}</div>
+                  <div class="meta-line"><span class="label">Endring</span>${item.changeText}</div>
+                </div>
                 <div class="period">${item.period}</div>
               </div>
               <div class="trend">
